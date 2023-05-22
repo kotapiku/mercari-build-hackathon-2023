@@ -455,35 +455,36 @@ func (h *Handler) Purchase(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
-	// 売り出してない商品のとき
-	if item.Status != domain.ItemStatusOnSale {
-		return echo.NewHTTPError(http.StatusPreconditionFailed, "item status is not on sale")
-	}
 
-	if err := h.ItemRepo.UpdateItemStatus(ctx, int32(itemID), domain.ItemStatusSoldOut); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
-	}
-
+	// user, sellerの取得
 	user, err := h.UserRepo.GetUser(ctx, userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
-
-
-	// TODO: if it is fail here, item status is still sold
-	// TODO: balance consistency
-	// TODO: not to buy own items. 自身の商品を買おうとしていたら、http.StatusPreconditionFailed(412)
-	if err := h.UserRepo.UpdateBalance(ctx, userID, user.Balance-item.Price); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
-	}
-
 	sellerID := item.UserID
-
 	seller, err := h.UserRepo.GetUser(ctx, sellerID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
+	// 売買が成立するかどうかの判定
+	if item.Status != domain.ItemStatusOnSale {
+		return echo.NewHTTPError(http.StatusPreconditionFailed, "item status is not on sale")
+	}
+	if user.Balance < item.Price {
+		return echo.NewHTTPError(http.StatusPreconditionFailed, "balance is not enough")
+	}
+	if userID == sellerID {
+		return echo.NewHTTPError(http.StatusPreconditionFailed, "can not buy own items")
+	}
+
+	// 売買
+	if err := h.ItemRepo.UpdateItemStatus(ctx, int32(itemID), domain.ItemStatusSoldOut); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	if err := h.UserRepo.UpdateBalance(ctx, userID, user.Balance-item.Price); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
 	if err := h.UserRepo.UpdateBalance(ctx, sellerID, seller.Balance+item.Price); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
