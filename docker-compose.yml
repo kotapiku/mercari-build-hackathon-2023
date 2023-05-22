@@ -1,0 +1,21 @@
+version: '3'
+services:
+  backend:
+    image: ghcr.io/mercari-build/mercari-build-hackathon-2023-backend:<VERSION>
+    container_name: backend
+    restart: always
+    ports:
+      - 9000:9000
+
+  frontend:
+    image: ghcr.io/mercari-build/mercari-build-hackathon-2023-frontend:<VERSION>
+    container_name: frontend
+    restart: always
+    ports:
+      - 3000:3000
+    environment:
+      PORT: 3000
+      HOST: 0.0.0.0
+      REACT_APP_API_URL: backend:9000
+    depends_on:
+      - backend
