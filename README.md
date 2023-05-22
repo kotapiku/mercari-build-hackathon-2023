@@ -24,8 +24,10 @@ $ go run tools/setup.go -g [your github name] -t [your team id]
 
 See `backend/README.md` for backend service and `frontend/simple-mercari-web/README.md` for frontend service.
 
-## How to run bench marker(TBD)
-Release on Monday. Please wait!
+## How to run bench marker
+
+* Open [dashboard](https://mercari-build-hackathon-2023-front-d3sqdyhc4a-uc.a.run.app/)
+* Tap `RUN BENCHMARK` Button!
 
 ## What should we do first?
 
