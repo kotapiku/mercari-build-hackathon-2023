@@ -118,10 +118,6 @@ func GetSecret() string {
 	return "secret-key"
 }
 
-func (h *Handler) Readiness(c echo.Context) error {
-	return c.JSON(http.StatusOK, "Server is running.")
-}
-
 func (h *Handler) Initialize(c echo.Context) error {
 	err := os.Truncate(logFile, 0)
 	if err != nil {

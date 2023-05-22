@@ -76,7 +76,6 @@ func run(ctx context.Context) int {
 	}
 
 	// Routes
-	e.GET("/", h.Readiness)
 	e.POST("/initialize", h.Initialize)
 	e.GET("/log", h.AccessLog)
 
