@@ -86,6 +86,8 @@ func run(ctx context.Context) int {
 	e.POST("/register", h.Register)
 	e.POST("/login", h.Login)
 
+	e.GET("/search", h.Search)
+
 	// Login required
 	l := e.Group("")
 	l.Use(echojwt.WithConfig(config))
