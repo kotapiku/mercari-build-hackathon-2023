@@ -151,7 +151,7 @@ func (h *Handler) Register(c echo.Context) error {
 
 	userID, err := h.UserRepo.AddUser(c.Request().Context(), domain.User{Name: req.Name, Password: string(hash)})
 	if err != nil {
-		if err == db.ErrExistsSameID {
+		if err == db.ErrConflict {
 			return echo.NewHTTPError(http.StatusConflict, err)
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
@@ -254,6 +254,9 @@ func (h *Handler) AddItem(c echo.Context) error {
 		Status:      domain.ItemStatusInitial,
 	})
 	if err != nil {
+		if err == db.ErrConflict {
+			return echo.NewHTTPError(http.StatusConflict, err)
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
