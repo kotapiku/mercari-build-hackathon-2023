@@ -68,8 +68,8 @@ func main() {
 			return err
 		}
 
-		re := regexp.MustCompile("github.com/.+/mecari-build-hackathon-2023")
-		newString := re.ReplaceAllString(string(contents), fmt.Sprintf("github.com/%s/mecari-build-hackathon-2023", *g))
+		re := regexp.MustCompile("github.com/.+/mercari-build-hackathon-2023")
+		newString := re.ReplaceAllString(string(contents), fmt.Sprintf("github.com/%s/mercari-build-hackathon-2023", *g))
 
 		if string(contents) == newString {
 			return nil
