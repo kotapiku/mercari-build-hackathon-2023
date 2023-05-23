@@ -16,7 +16,7 @@ export const ItemList: React.FC<Prop> = (props) => {
     <div>
       {props.items &&
         props.items.map((item) => {
-          return <Item item={item} />;
+          return <Item item={item} key={item.id} />;
         })}
     </div>
   );
