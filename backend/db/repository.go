@@ -75,10 +75,10 @@ func NewItemRepository(db *sql.DB) ItemRepository {
 
 func (r *ItemDBRepository) AddItem(ctx context.Context, item domain.Item) (domain.Item, error) {
 	rst, err := r.ExecContext(ctx, "INSERT INTO items (name, price, description, category_id, seller_id, image, status) VALUES (?, ?, ?, ?, ?, ?, ?)", item.Name, item.Price, item.Description, item.CategoryID, item.UserID, item.Image, item.Status)
-	lastID, err2 := rst.LastInsertId()
 	if err != nil {
 		return domain.Item{}, err
 	}
+	lastID, err2 := rst.LastInsertId()
 	if err2 != nil {
 		return domain.Item{}, ErrConflict
 	}
