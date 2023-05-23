@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/kotapiku/mercari-build-hackathon-2023/backend/domain"
 )
@@ -21,13 +22,19 @@ func NewUserRepository(db *sql.DB) UserRepository {
 	return &UserDBRepository{DB: db}
 }
 
+var (
+	ErrConflict = errors.New("id conflict occurs")
+)
+
 func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64, error) {
-	if _, err := r.ExecContext(ctx, "INSERT INTO users (name, password) VALUES (?, ?)", user.Name, user.Password); err != nil {
+
+	if _, err := r.ExecContext(ctx, "INSERT OR ABORT INTO users (name, password) VALUES (?, ?)", user.Name, user.Password, user.Name); err != nil {
+		if err.Error() == "UNIQUE constraint failed: users.name" {
+			return 0, ErrConflict
+		}
 		return 0, err
 	}
-	// TODO: if other insert query is executed at the same time, it might return wrong id
-	// http.StatusConflict(409) 既に同じIDがあった場合
-	row := r.QueryRowContext(ctx, "SELECT id FROM users WHERE rowid = LAST_INSERT_ROWID()")
+	row := r.QueryRowContext(ctx, "SELECT id FROM users WHERE name = ?", user.Name)
 
 	var id int64
 	return id, row.Scan(&id)
@@ -67,12 +74,16 @@ func NewItemRepository(db *sql.DB) ItemRepository {
 }
 
 func (r *ItemDBRepository) AddItem(ctx context.Context, item domain.Item) (domain.Item, error) {
-	if _, err := r.ExecContext(ctx, "INSERT INTO items (name, price, description, category_id, seller_id, image, status) VALUES (?, ?, ?, ?, ?, ?, ?)", item.Name, item.Price, item.Description, item.CategoryID, item.UserID, item.Image, item.Status); err != nil {
+	rst, err := r.ExecContext(ctx, "INSERT INTO items (name, price, description, category_id, seller_id, image, status) VALUES (?, ?, ?, ?, ?, ?, ?)", item.Name, item.Price, item.Description, item.CategoryID, item.UserID, item.Image, item.Status)
+	if err != nil {
 		return domain.Item{}, err
 	}
-	// TODO: if other insert query is executed at the same time, it might return wrong id
-	// http.StatusConflict(409) 既に同じIDがあった場合
-	row := r.QueryRowContext(ctx, "SELECT * FROM items WHERE rowid = LAST_INSERT_ROWID()")
+	lastID, err2 := rst.LastInsertId()
+	if err2 != nil {
+		return domain.Item{}, ErrConflict
+	}
+
+	row := r.QueryRowContext(ctx, "SELECT * FROM items WHERE rowid = ?", lastID)
 
 	var res domain.Item
 	return res, row.Scan(&res.ID, &res.Name, &res.Price, &res.Description, &res.CategoryID, &res.UserID, &res.Image, &res.Status, &res.CreatedAt, &res.UpdatedAt)
