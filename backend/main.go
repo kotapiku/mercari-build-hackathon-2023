@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/kotapiku/mercari-build-hackathon-2023/backend/db"
+	"github.com/kotapiku/mercari-build-hackathon-2023/backend/handler"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/kotapiku/mecari-build-hackathon-2023/backend/db"
-	"github.com/kotapiku/mecari-build-hackathon-2023/backend/handler"
 )
 
 const (
