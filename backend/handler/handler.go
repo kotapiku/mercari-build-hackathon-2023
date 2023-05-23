@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
 	"github.com/kotapiku/mecari-build-hackathon-2023/backend/db"
 	"github.com/kotapiku/mecari-build-hackathon-2023/backend/domain"
+	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -151,6 +151,9 @@ func (h *Handler) Register(c echo.Context) error {
 
 	userID, err := h.UserRepo.AddUser(c.Request().Context(), domain.User{Name: req.Name, Password: string(hash)})
 	if err != nil {
+		if err == db.ErrExistsSameID {
+			return echo.NewHTTPError(http.StatusConflict, err)
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 

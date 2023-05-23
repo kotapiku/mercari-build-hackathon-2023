@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/kotapiku/mecari-build-hackathon-2023/backend/domain"
 )
@@ -21,13 +22,19 @@ func NewUserRepository(db *sql.DB) UserRepository {
 	return &UserDBRepository{DB: db}
 }
 
+var (
+	ErrExistsSameID = errors.New("already exists same id")
+)
+
 func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64, error) {
-	if _, err := r.ExecContext(ctx, "INSERT INTO users (name, password) VALUES (?, ?)", user.Name, user.Password); err != nil {
+
+	if _, err := r.ExecContext(ctx, "INSERT OR ABORT INTO users (name, password) VALUES (?, ?)", user.Name, user.Password, user.Name); err != nil {
+		if err.Error() == "UNIQUE constraint failed: users.name" {
+			return 0, ErrExistsSameID
+		}
 		return 0, err
 	}
-	// TODO: if other insert query is executed at the same time, it might return wrong id
-	// http.StatusConflict(409) 既に同じIDがあった場合
-	row := r.QueryRowContext(ctx, "SELECT id FROM users WHERE rowid = LAST_INSERT_ROWID()")
+	row := r.QueryRowContext(ctx, "SELECT id FROM users WHERE name = ?", user.Name)
 
 	var id int64
 	return id, row.Scan(&id)
