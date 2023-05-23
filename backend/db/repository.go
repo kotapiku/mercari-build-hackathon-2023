@@ -98,8 +98,7 @@ func (r *ItemDBRepository) GetItem(ctx context.Context, id int32) (domain.Item, 
 }
 
 func (r *ItemDBRepository) SearchItem(ctx context.Context, itemName string) ([]domain.Item, error) {
-	rows, err := r.QueryContext(ctx, "SELECT * FROM items WHERE name=?", itemName)
-	// rows, err := r.QueryContext(ctx, "SELECT * FROM items WHERE name LIKE ?", "%"+itemName+"%")
+	rows, err := r.QueryContext(ctx, "SELECT * FROM items WHERE name LIKE ?", "%"+itemName+"%")
 	if err != nil {
 		return nil, err
 	}
