@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { useCookies } from "react-cookie";
-import { Footer } from "../Footer";
+// import { Footer } from "../Footer";
 import { NotFound } from "../NotFound";
 
 interface Prop {
@@ -21,7 +21,7 @@ export const MerComponent: React.FC<Prop> = (props) => {
   return (
     <>
       {props.children}
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 };
