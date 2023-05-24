@@ -35,9 +35,6 @@ export const Header: React.FC = () => {
           <Heading>Simple Mercari</Heading>
         </div>
         <div className="LogoutButtonContainer">
-          {/* <button onClick={onLogout} id="MerButton">
-            Logout
-          </button> */}
           <Button color="" onClick={onLogout}>Logout</Button>
         </div>
         <Tabs>
