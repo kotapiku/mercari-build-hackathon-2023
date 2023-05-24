@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -103,6 +104,10 @@ type loginResponse struct {
 	ID    int64  `json:"id"`
 	Name  string `json:"name"`
 	Token string `json:"token"`
+}
+
+type searchResponse struct {
+	Items []getItemResponse `json:"items"`
 }
 
 type Handler struct {
@@ -324,11 +329,16 @@ func (h *Handler) GetItem(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	category, err := h.ItemRepo.GetCategory(ctx, item.CategoryID)
+	itemResp, err := h.MakeGetItemResponse(ctx, item)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, getItemResponse{
+	return c.JSON(http.StatusOK, itemResp)
+}
+
+func (h *Handler) MakeGetItemResponse(ctx context.Context, item domain.Item) (getItemResponse, error) {
+	category, err := h.ItemRepo.GetCategory(ctx, item.CategoryID)
+	return getItemResponse{
 		ID:           item.ID,
 		Name:         item.Name,
 		CategoryID:   item.CategoryID,
@@ -337,7 +347,7 @@ func (h *Handler) GetItem(c echo.Context) error {
 		Price:        item.Price,
 		Description:  item.Description,
 		Status:       item.Status,
-	})
+	}, err
 }
 
 func (h *Handler) GetUserItems(c echo.Context) error {
@@ -401,6 +411,26 @@ func (h *Handler) GetImage(c echo.Context) error {
 	}
 
 	return c.Blob(http.StatusOK, "image/jpeg", data)
+}
+
+func (h *Handler) Search(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	itemName := c.QueryParam("name")
+	items, err := h.ItemRepo.SearchItem(ctx, itemName)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	itemRs := make([]getItemResponse, len(items))
+	for _, item := range items {
+		if rst, err := h.MakeGetItemResponse(ctx, item); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		} else {
+			itemRs = append(itemRs, rst)
+		}
+	}
+	return c.JSON(http.StatusOK, searchResponse{Items: itemRs})
 }
 
 func (h *Handler) AddBalance(c echo.Context) error {
