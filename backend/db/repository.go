@@ -78,7 +78,7 @@ type ItemRepository interface {
 	GetCategory(ctx context.Context, id int64) (domain.Category, error)
 	GetCategories(ctx context.Context) ([]domain.Category, error)
 	UpdateItemStatus(ctx context.Context, id int32, status domain.ItemStatus) error
-	SearchItem(ctx context.Context, itemName string) ([]domain.Item, error)
+	SearchItem(ctx context.Context, itemName string) ([]domain.ItemWithCategory, error)
 }
 
 type ItemDBRepository struct {
@@ -112,21 +112,41 @@ func (r *ItemDBRepository) GetItem(ctx context.Context, id int32) (domain.Item, 
 	return item, row.Scan(&item.ID, &item.Name, &item.Price, &item.Description, &item.CategoryID, &item.UserID, &item.Image, &item.Status, &item.CreatedAt, &item.UpdatedAt)
 }
 
-func (r *ItemDBRepository) SearchItem(ctx context.Context, itemName string) ([]domain.Item, error) {
-	rows, err := r.QueryContext(ctx, "SELECT * FROM items WHERE name LIKE ?", "%"+itemName+"%")
+func (r *ItemDBRepository) SearchItem(ctx context.Context, itemName string) ([]domain.ItemWithCategory, error) {
+	rows, err := r.QueryContext(ctx,
+		`
+		SELECT
+			items.id,
+			items.name,
+			items.price,
+			items.description,
+			items.category_id,
+			items.seller_id,
+			items.image,
+			items.status,
+			items.created_at,
+			items.updated_at,
+			category.id,
+			category.name
+		FROM items
+		LEFT OUTER JOIN category
+		ON items.category_id = category.id
+		WHERE items.name LIKE ?
+		`, "%"+itemName+"%")
 	if err != nil {
 		return nil, err
 	}
 
 	defer rows.Close()
 
-	var items []domain.Item
+	var items []domain.ItemWithCategory
 	for rows.Next() {
 		var item domain.Item
-		if err := rows.Scan(&item.ID, &item.Name, &item.Price, &item.Description, &item.CategoryID, &item.UserID, &item.Image, &item.Status, &item.CreatedAt, &item.UpdatedAt); err != nil {
+		var category domain.Category
+		if err := rows.Scan(&item.ID, &item.Name, &item.Price, &item.Description, &item.CategoryID, &item.UserID, &item.Image, &item.Status, &item.CreatedAt, &item.UpdatedAt, &category.ID, &category.Name); err != nil {
 			return nil, err
 		}
-		items = append(items, item)
+		items = append(items, domain.ItemWithCategory{Item: item, Category: category})
 	}
 	if rows.Err() != nil {
 		return nil, err

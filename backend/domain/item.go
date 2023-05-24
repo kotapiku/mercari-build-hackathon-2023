@@ -21,6 +21,11 @@ type Item struct {
 	UpdatedAt   string
 }
 
+type ItemWithCategory struct {
+	Item     Item
+	Category Category
+}
+
 type Category struct {
 	ID   int64
 	Name string

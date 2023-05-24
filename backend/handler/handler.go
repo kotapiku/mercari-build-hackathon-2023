@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -329,25 +328,21 @@ func (h *Handler) GetItem(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	itemResp, err := h.MakeGetItemResponse(ctx, item)
+	category, err := h.ItemRepo.GetCategory(ctx, item.CategoryID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, itemResp)
-}
-
-func (h *Handler) MakeGetItemResponse(ctx context.Context, item domain.Item) (getItemResponse, error) {
-	category, err := h.ItemRepo.GetCategory(ctx, item.CategoryID)
-	return getItemResponse{
-		ID:           item.ID,
-		Name:         item.Name,
-		CategoryID:   item.CategoryID,
-		CategoryName: category.Name,
-		UserID:       item.UserID,
-		Price:        item.Price,
-		Description:  item.Description,
-		Status:       item.Status,
-	}, err
+	return c.JSON(http.StatusOK,
+		getItemResponse{
+			ID:           item.ID,
+			Name:         item.Name,
+			CategoryID:   item.CategoryID,
+			CategoryName: category.Name,
+			UserID:       item.UserID,
+			Price:        item.Price,
+			Description:  item.Description,
+			Status:       item.Status,
+		})
 }
 
 func (h *Handler) GetUserItems(c echo.Context) error {
@@ -422,15 +417,20 @@ func (h *Handler) Search(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	itemRs := make([]getItemResponse, len(items))
+	itemsRsp := make([]getItemResponse, len(items))
 	for _, item := range items {
-		if rst, err := h.MakeGetItemResponse(ctx, item); err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err)
-		} else {
-			itemRs = append(itemRs, rst)
-		}
+		itemsRsp = append(itemsRsp, getItemResponse{
+			ID:           item.Item.ID,
+			Name:         item.Item.Name,
+			CategoryID:   item.Category.ID,
+			CategoryName: item.Category.Name,
+			UserID:       item.Item.UserID,
+			Price:        item.Item.Price,
+			Description:  item.Item.Description,
+			Status:       item.Item.Status,
+		})
 	}
-	return c.JSON(http.StatusOK, searchResponse{Items: itemRs})
+	return c.JSON(http.StatusOK, searchResponse{Items: itemsRsp})
 }
 
 func (h *Handler) AddBalance(c echo.Context) error {
