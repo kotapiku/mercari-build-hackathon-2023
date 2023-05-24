@@ -13,9 +13,9 @@ export const Header: React.FC = () => {
   return (
     <>
       <header>
-        <p>
-          <b>Simple Mercari</b>
-        </p>
+        <h1>
+          Simple Mercari
+        </h1>
         <div className="LogoutButtonContainer">
           <button onClick={onLogout} id="MerButton">
             Logout
