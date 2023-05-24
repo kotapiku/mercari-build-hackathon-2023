@@ -39,12 +39,12 @@ export const Login = () => {
   return (
     <div>
       <div className="Login">
-        <label id="MerInputLabel">User ID</label>
+        <label id="MerInputLabel">User Name</label>
         <input
-          type="number"
-          name="userID"
+          type="text"
+          name="name"
           id="MerTextInput"
-          placeholder="UserID"
+          placeholder="name"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setUserID(Number(e.target.value));
           }}
