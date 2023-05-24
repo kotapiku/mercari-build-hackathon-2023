@@ -64,7 +64,8 @@ export const Signup = () => {
           Signup
         </button>
         {userID ? (
-          <p>You have successfully registered!</p>
+          <p>Use "{userID}" as UserID for login<br></br>
+          You have successfully registered!</p>
         ) : null}
       </div>
     </div>
