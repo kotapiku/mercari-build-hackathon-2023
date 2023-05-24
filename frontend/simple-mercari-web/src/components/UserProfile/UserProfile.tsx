@@ -74,7 +74,7 @@ export const UserProfile: React.FC = () => {
       .then((_) => window.location.reload())
       .catch((err) => {
         console.log(`POST error:`, err);
-        toast.error(err.message);
+        toast.error("Please enter a number greater than 0");
       });
   };
 
@@ -91,6 +91,7 @@ export const UserProfile: React.FC = () => {
               name="balance"
               id="MerTextInput"
               placeholder="0"
+              min = "0"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setAddedBalance(Number(e.target.value));
               }}

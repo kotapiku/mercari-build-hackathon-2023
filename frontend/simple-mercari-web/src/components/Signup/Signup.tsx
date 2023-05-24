@@ -32,7 +32,7 @@ export const Signup = () => {
       })
       .catch((err) => {
         console.log(`POST error:`, err);
-        toast.error(err.message);
+        toast.error("This User Name is already used");
       });
   };
 
@@ -64,7 +64,8 @@ export const Signup = () => {
           Signup
         </button>
         {userID ? (
-          <p>Use "{userID}" as UserID for login</p>
+          <p>Use "{userID}" as UserID for login<br></br>
+          You have successfully registered!</p>
         ) : null}
       </div>
     </div>
