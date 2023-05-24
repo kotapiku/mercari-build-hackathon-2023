@@ -42,11 +42,11 @@ export const Header: React.FC = () => {
         <Tabs>
           {tabs.map((tab) => {
             return (
-              <Tabs.Tab active={activeTab === tab.name}>
-                <div
-                  className="tabItem"
-                  onClick={() => handleTabClick(tab.name, tab.to)}
-                >
+              <Tabs.Tab
+                active={activeTab === tab.name}
+                onClick={() => handleTabClick(tab.name, tab.to)}
+              >
+                <div className="tabItem">
                   {tab.icon}
                   <span>{tab.name}</span>
                 </div>
