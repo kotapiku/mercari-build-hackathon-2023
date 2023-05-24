@@ -416,7 +416,7 @@ func (h *Handler) GetImage(c echo.Context) error {
 func (h *Handler) Search(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	itemName := c.Param("name")
+	itemName := c.QueryParam("name")
 	items, err := h.ItemRepo.SearchItem(ctx, itemName)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
