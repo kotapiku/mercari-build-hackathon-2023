@@ -1,11 +1,18 @@
 header {
-  display: flex;
+  /* display: flex; */
   position: sticky;
-  justify-content: center;
   top: 0;
   width: 100%;
   background-color: white;
   border-bottom: 1px solid lightgray;
+}
+
+.titleWrapper {
+  padding-top: 1rem;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .LogoutButtonContainer {
@@ -13,4 +20,11 @@ header {
   right: 1rem;
   top: 1rem;
   width: 100px;
+}
+
+.tabItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }

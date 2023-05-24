@@ -1,6 +1,10 @@
 import { useCookies } from "react-cookie";
 import "./Header.css";
-
+import { useNavigate } from "react-router-dom";
+import { FaCamera, FaHome, FaUser } from "react-icons/fa";
+import { Heading, Tabs } from "react-bulma-components";
+import "bulma/css/bulma.min.css";
+import { useState } from "react";
 export const Header: React.FC = () => {
   const [cookies, _, removeCookie] = useCookies(["userID", "token"]);
 
@@ -10,18 +14,47 @@ export const Header: React.FC = () => {
     removeCookie("token");
   };
 
+  const navigate = useNavigate();
+
+  const tabs = [
+    { name: "Home", icon: <FaHome />, to: "/" },
+    { name: "Listing", icon: <FaCamera />, to: "/sell" },
+    { name: "MyPage", icon: <FaUser />, to: `/user/${cookies.userID}` },
+  ];
+
+  const handleTabClick = (tabName: string, to: string) => {
+    setActiveTab(tabName);
+    navigate(to);
+  };
+
+  const [activeTab, setActiveTab] = useState("Home");
   return (
     <>
       <header>
-        <h1>
-          Simple Mercari
-        </h1>
+        <div className="titleWrapper">
+          <Heading>Simple Mercari</Heading>
+        </div>
         <div className="LogoutButtonContainer">
           <button onClick={onLogout} id="MerButton">
             Logout
           </button>
         </div>
+        <Tabs>
+          {tabs.map((tab) => {
+            return (
+              <Tabs.Tab active={activeTab === tab.name}>
+                <div
+                  className="tabItem"
+                  onClick={() => handleTabClick(tab.name, tab.to)}
+                >
+                  {tab.icon}
+                  <span>{tab.name}</span>
+                </div>
+              </Tabs.Tab>
+            );
+          })}
+        </Tabs>
       </header>
     </>
   );
-}
+};
