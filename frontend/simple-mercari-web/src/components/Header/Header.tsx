@@ -2,7 +2,7 @@ import { useCookies } from "react-cookie";
 import "./Header.css";
 import { useNavigate } from "react-router-dom";
 import { FaCamera, FaHome, FaUser } from "react-icons/fa";
-import { Heading, Tabs } from "react-bulma-components";
+import { Button, Heading, Tabs } from "react-bulma-components";
 import "bulma/css/bulma.min.css";
 import { useState } from "react";
 export const Header: React.FC = () => {
@@ -35,9 +35,10 @@ export const Header: React.FC = () => {
           <Heading>Simple Mercari</Heading>
         </div>
         <div className="LogoutButtonContainer">
-          <button onClick={onLogout} id="MerButton">
+          {/* <button onClick={onLogout} id="MerButton">
             Logout
-          </button>
+          </button> */}
+          <Button color="" onClick={onLogout}>Logout</Button>
         </div>
         <Tabs>
           {tabs.map((tab) => {
