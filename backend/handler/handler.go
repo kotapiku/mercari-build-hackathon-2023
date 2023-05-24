@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/kotapiku/mercari-build-hackathon-2023/backend/db"
-	"github.com/kotapiku/mercari-build-hackathon-2023/backend/domain"
+	// "github.com/kotapiku/mercari-build-hackathon-2023/backend/db"
+	// "github.com/kotapiku/mercari-build-hackathon-2023/backend/domain"
 	"github.com/labstack/echo/v4"
+	"github.com/aki2130/mecari-build-hackathon-2023/backend/db"
+	"github.com/aki2130/mecari-build-hackathon-2023/backend/domain"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -409,6 +411,9 @@ func (h *Handler) AddBalance(c echo.Context) error {
 	req := new(addBalanceRequest)
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	if req.Balance <= 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, req)
 	}
 
 	userID, err := getUserID(c)
