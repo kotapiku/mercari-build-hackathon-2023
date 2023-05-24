@@ -1,6 +1,11 @@
 header {
   display: flex;
-  flex-direction: row;
+  position: sticky;
+  justify-content: center;
+  top: 0;
+  width: 100%;
+  background-color: white;
+  border-bottom: 1px solid lightgray;
 }
 
 .LogoutButtonContainer {
