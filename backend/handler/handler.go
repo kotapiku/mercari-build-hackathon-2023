@@ -410,6 +410,9 @@ func (h *Handler) AddBalance(c echo.Context) error {
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
+	if req.Balance <= 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, req)
+	}
 
 	userID, err := getUserID(c)
 	if err != nil {
