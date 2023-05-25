@@ -15,8 +15,13 @@ header {
   justify-content: center;
 }
 
+.tabsWrapper {
+  display: flex;
+  justify-content: center;
+}
+
 .LogoutButtonContainer {
-  position: fixed;
+  position: absolute;
   right: 1rem;
   top: 1rem;
   width: 100px;
