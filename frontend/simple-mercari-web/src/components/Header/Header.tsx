@@ -33,28 +33,31 @@ export const Header: React.FC = () => {
     <>
       <header>
         <div className="titleWrapper">
-          <Heading className='is-size-2-desktop is-size-4-mobile'>Simple Mercari</Heading>
+          <Heading className="is-size-2-desktop is-size-4-mobile">
+            Simple Mercari
+          </Heading>
         </div>
         <div className="LogoutButtonContainer">
-          <Button color="" onClick={onLogout} className="is-responsive">Logout</Button>
+          <Button color="" onClick={onLogout} className="is-responsive">
+            Logout
+          </Button>
         </div>
         <div className="tabsWrapper">
-
-        <Tabs>
-          {tabs.map((tab) => {
-            return (
-              <Tabs.Tab
-                active={activeTab === tab.name}
-                onClick={() => handleTabClick(tab.name, tab.to)}
-              >
-                <div className="tabItem">
-                  {tab.icon}
-                  <span>{tab.name}</span>
-                </div>
-              </Tabs.Tab>
-            );
-          })}
-        </Tabs>
+          <Tabs>
+            {tabs.map((tab) => {
+              return (
+                <Tabs.Tab
+                  active={activeTab === tab.name}
+                  onClick={() => handleTabClick(tab.name, tab.to)}
+                >
+                  <div className="tabItem">
+                    {tab.icon}
+                    <span>{tab.name}</span>
+                  </div>
+                </Tabs.Tab>
+              );
+            })}
+          </Tabs>
         </div>
       </header>
     </>
