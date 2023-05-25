@@ -81,7 +81,7 @@ type ItemRepository interface {
 	AddItem(ctx context.Context, item domain.Item) (domain.Item, error)
 	GetItem(ctx context.Context, id int32) (domain.Item, error)
 	GetItemImage(ctx context.Context, id int32) ([]byte, error)
-	GetOnSaleItems(ctx context.Context) ([]domain.Item, error)
+	GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.Item, error)
 	GetItemsByUserID(ctx context.Context, userID int64) ([]domain.Item, error)
 	GetCategory(ctx context.Context, id int64) (domain.Category, error)
 	GetCategories(ctx context.Context) ([]domain.Category, error)
@@ -168,8 +168,8 @@ func (r *ItemDBRepository) GetItemImage(ctx context.Context, id int32) ([]byte, 
 	return image, row.Scan(&image)
 }
 
-func (r *ItemDBRepository) GetOnSaleItems(ctx context.Context) ([]domain.Item, error) {
-	rows, err := r.QueryContext(ctx, "SELECT * FROM items WHERE status = ? ORDER BY updated_at desc", domain.ItemStatusOnSale)
+func (r *ItemDBRepository) GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.Item, error) {
+	rows, err := r.QueryContext(ctx, "SELECT * FROM items WHERE status = ? ORDER BY updated_at desc", status)
 	if err != nil {
 		return nil, err
 	}
