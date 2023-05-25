@@ -24,16 +24,19 @@ export const Header: React.FC = () => {
 
   const handleTabClick = (tabName: string, to: string) => {
     setActiveTab(tabName);
+    localStorage.setItem("activeTab", tabName);
     navigate(to);
   };
 
-  const [activeTab, setActiveTab] = useState("Home");
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("activeTab") || "Home";
+  });
 
   return (
     <>
       <header>
         <div className="titleWrapper">
-          <Heading className="is-size-2-desktop is-size-4-mobile">
+          <Heading className="is-size-3-desktop is-size-4-mobile">
             Simple Mercari
           </Heading>
         </div>
@@ -42,21 +45,21 @@ export const Header: React.FC = () => {
             Logout
           </Button>
         </div>
-          <Tabs type="boxed" className="is-centered">
-            {tabs.map((tab) => {
-              return (
-                <Tabs.Tab
-                  active={activeTab === tab.name}
-                  onClick={() => handleTabClick(tab.name, tab.to)}
-                >
-                  <div className="tabItem">
-                    {tab.icon}
-                    <span>{tab.name}</span>
-                  </div>
-                </Tabs.Tab>
-              );
-            })}
-          </Tabs>
+        <Tabs type="boxed" className="is-centered is-medium">
+          {tabs.map((tab) => {
+            return (
+              <Tabs.Tab
+                active={activeTab === tab.name}
+                onClick={() => handleTabClick(tab.name, tab.to)}
+              >
+                <div className="tabItem">
+                  {tab.icon}
+                  <span>{tab.name}</span>
+                </div>
+              </Tabs.Tab>
+            );
+          })}
+        </Tabs>
       </header>
     </>
   );
