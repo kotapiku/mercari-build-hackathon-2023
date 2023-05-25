@@ -28,16 +28,18 @@ export const Header: React.FC = () => {
   };
 
   const [activeTab, setActiveTab] = useState("Home");
-  
+
   return (
     <>
       <header>
         <div className="titleWrapper">
-          <Heading>Simple Mercari</Heading>
+          <Heading className='is-size-2-desktop is-size-4-mobile'>Simple Mercari</Heading>
         </div>
         <div className="LogoutButtonContainer">
-          <Button color="" onClick={onLogout}>Logout</Button>
+          <Button color="" onClick={onLogout} className="is-responsive">Logout</Button>
         </div>
+        <div className="tabsWrapper">
+
         <Tabs>
           {tabs.map((tab) => {
             return (
@@ -53,6 +55,7 @@ export const Header: React.FC = () => {
             );
           })}
         </Tabs>
+        </div>
       </header>
     </>
   );
