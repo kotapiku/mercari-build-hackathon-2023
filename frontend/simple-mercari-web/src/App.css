@@ -1,16 +1,16 @@
 body {
-  background-color: white;
+  background-color: #222427;
 }
 
 .MerComponent {
-  background-color: white;
+  background-color: #222427;
   min-height: 8vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: left;
   font-size: calc(10px + 1vmin);
-  color: black;
+  color: white;
 }
 
 #MerTextInput {

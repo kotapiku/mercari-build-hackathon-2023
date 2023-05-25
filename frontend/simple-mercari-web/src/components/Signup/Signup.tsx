@@ -89,11 +89,10 @@ export const Signup = () => {
           }}
         />
         <label id="Caution">
-          {validPassLength ? <span></span> : <span>　＊More than 6 Character</span>}
-          <br></br>  
+          {validPassLength ? <span></span> : <span>　＊More than 6 Character<br></br> </span>}
           {hasNumber ? <span></span> : <span>　＊Need a Number</span>}
         </label>
-          
+        
         <button onClick={onSubmit} disabled={!validNameLength || !validPassLength || !hasNumber} id="MerButton">
           Signup
         </button>
