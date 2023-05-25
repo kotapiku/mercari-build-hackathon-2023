@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -134,12 +135,32 @@ func (h *Handler) AccessLog(c echo.Context) error {
 	return c.File(logFile)
 }
 
+func isValidName(name string) bool {
+	// ユーザー名, アイテム名に使用できる文字の正規表現パターン
+	pattern := "^[a-zA-Z0-9_]+$"
+	reg := regexp.MustCompile(pattern)
+	return name != "" && reg.MatchString(name)
+}
+
+func isValidPassword(password string) bool {
+	// パスワードに使用できる文字の正規表現パターン
+	pattern := "^[a-zA-Z0-9!@#$%^&*]+$"
+	reg := regexp.MustCompile(pattern)
+	return password != "" && reg.MatchString(password)
+}
+
 func (h *Handler) Register(c echo.Context) error {
-	// TODO: validation
-	// http.StatusBadRequest(400)
 	req := new(registerRequest)
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	// validation
+	if !isValidName(req.Name) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid username"))
+	}
+	if !isValidPassword(req.Password) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid password"))
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -159,12 +180,15 @@ func (h *Handler) Register(c echo.Context) error {
 }
 
 func (h *Handler) Login(c echo.Context) error {
-	// TODO: validation
-	// http.StatusBadRequest(400)
 	ctx := c.Request().Context()
 	req := new(LoginRequestByID)
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	// validation
+	if !isValidPassword(req.Password) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid password"))
 	}
 
 	user, encodedToken, err := h.LoginService.LoginByID(ctx, req.UserID, req.Password)
@@ -183,12 +207,18 @@ func (h *Handler) Login(c echo.Context) error {
 }
 
 func (h *Handler) LoginByName(c echo.Context) error {
-	// TODO: validation
-	// http.StatusBadRequest(400)
 	ctx := c.Request().Context()
 	req := new(LoginRequestByName)
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	// validation
+	if !isValidName(req.UserName) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid username"))
+	}
+	if !isValidPassword(req.Password) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid password"))
 	}
 
 	user, encodedToken, err := h.LoginService.LoginByName(ctx, req.UserName, req.Password)
@@ -207,8 +237,6 @@ func (h *Handler) LoginByName(c echo.Context) error {
 }
 
 func (h *Handler) AddItem(c echo.Context) error {
-	// TODO: validation
-	// http.StatusBadRequest(400)
 	ctx := c.Request().Context()
 
 	req := new(addItemRequest)
@@ -224,6 +252,16 @@ func (h *Handler) AddItem(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
+	// validation
+	if file.Size > 1<<20 {
+		return echo.NewHTTPError(http.StatusBadRequest, "file size is too large (> 1MB)")
+	}
+	if req.Price <= 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "price must be greater than 0")
+	}
+	if !isValidName(req.Name) {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid name")
+	}
 
 	src, err := file.Open()
 	if err != nil {
@@ -234,10 +272,6 @@ func (h *Handler) AddItem(c echo.Context) error {
 	var dest []byte
 	blob := bytes.NewBuffer(dest)
 
-	// 1MBより大きいファイルはアップロードできない
-	if file.Size > 1<<20 {
-		return echo.NewHTTPError(http.StatusBadRequest, "file size is too large")
-	}
 	if _, err := io.Copy(blob, src); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
@@ -290,7 +324,7 @@ func (h *Handler) Sell(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusPreconditionFailed, "can not sell other's item")
 	}
 	if item.Status != domain.ItemStatusInitial {
-		return echo.NewHTTPError(http.StatusPreconditionFailed, "Invalid item status")
+		return echo.NewHTTPError(http.StatusPreconditionFailed, "invalid item status")
 	}
 
 	if err := h.ItemRepo.UpdateItemStatus(ctx, item.ID, domain.ItemStatusOnSale); err != nil {

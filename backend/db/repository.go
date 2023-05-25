@@ -37,7 +37,7 @@ func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64
 	var count int
 	if err := row.Scan(&count); count > 0 || err != nil {
 		tx.Rollback()
-		return 0, ErrConflict
+		return 0, errors.New("user name already exists")
 	}
 	rst, err := tx.ExecContext(ctx, "INSERT INTO users (name, password) VALUES (?, ?) ", user.Name, user.Password)
 	if err != nil {
@@ -104,7 +104,7 @@ func (r *ItemDBRepository) AddItem(ctx context.Context, item domain.Item) (domai
 	}
 	lastID, err2 := rst.LastInsertId()
 	if err2 != nil {
-		return domain.Item{}, ErrConflict
+		return domain.Item{}, ErrConflict // idのconflictがおきたとき
 	}
 
 	row := r.QueryRowContext(ctx, "SELECT * FROM items WHERE rowid = ?", lastID)
