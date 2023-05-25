@@ -91,6 +91,7 @@ export const UserProfile: React.FC = () => {
               name="balance"
               id="MerTextInput"
               placeholder="0"
+              min = "0"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setAddedBalance(Number(e.target.value));
               }}
