@@ -11,6 +11,7 @@ import (
 type UserRepository interface {
 	AddUser(ctx context.Context, user domain.User) (int64, error)
 	GetUser(ctx context.Context, id int64) (domain.User, error)
+	GetUserByName(ctx context.Context, userName string) (domain.User, error)
 	UpdateBalance(ctx context.Context, id int64, balance int64) error
 }
 
@@ -57,6 +58,13 @@ func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64
 
 func (r *UserDBRepository) GetUser(ctx context.Context, id int64) (domain.User, error) {
 	row := r.QueryRowContext(ctx, "SELECT * FROM users WHERE id = ?", id)
+
+	var user domain.User
+	return user, row.Scan(&user.ID, &user.Name, &user.Password, &user.Balance)
+}
+
+func (r *UserDBRepository) GetUserByName(ctx context.Context, userName string) (domain.User, error) {
+	row := r.QueryRowContext(ctx, "SELECT * FROM users WHERE name = ?", userName)
 
 	var user domain.User
 	return user, row.Scan(&user.ID, &user.Name, &user.Password, &user.Balance)

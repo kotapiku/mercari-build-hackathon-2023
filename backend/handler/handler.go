@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/kotapiku/mercari-build-hackathon-2023/backend/db"
 	"github.com/kotapiku/mercari-build-hackathon-2023/backend/domain"
+	"github.com/kotapiku/mercari-build-hackathon-2023/backend/service"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -21,11 +21,6 @@ import (
 var (
 	logFile = getEnv("LOGFILE", "access.log")
 )
-
-type JwtCustomClaims struct {
-	UserID int64 `json:"user_id"`
-	jwt.RegisteredClaims
-}
 
 type InitializeResponse struct {
 	Message string `json:"message"`
@@ -94,8 +89,13 @@ type getBalanceResponse struct {
 	Balance int64 `json:"balance"`
 }
 
-type loginRequest struct {
+type LoginRequestByID struct {
 	UserID   int64  `json:"user_id"`
+	Password string `json:"password"`
+}
+
+type LoginRequestByName struct {
+	UserName string `json:"user_name"`
 	Password string `json:"password"`
 }
 
@@ -110,16 +110,10 @@ type searchResponse struct {
 }
 
 type Handler struct {
-	DB       *sql.DB
-	UserRepo db.UserRepository
-	ItemRepo db.ItemRepository
-}
-
-func GetSecret() string {
-	if secret := os.Getenv("SECRET"); secret != "" {
-		return secret
-	}
-	return "secret-key"
+	DB           *sql.DB
+	UserRepo     db.UserRepository
+	ItemRepo     db.ItemRepository
+	LoginService service.LoginService
 }
 
 func (h *Handler) Initialize(c echo.Context) error {
@@ -165,38 +159,43 @@ func (h *Handler) Register(c echo.Context) error {
 }
 
 func (h *Handler) Login(c echo.Context) error {
-	ctx := c.Request().Context()
 	// TODO: validation
 	// http.StatusBadRequest(400)
-	req := new(loginRequest)
+	ctx := c.Request().Context()
+	req := new(LoginRequestByID)
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	user, err := h.UserRepo.GetUser(ctx, req.UserID)
+	user, encodedToken, err := h.LoginService.LoginByID(ctx, req.UserID, req.Password)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
+		if err == service.ErrMismatchPassword {
 			return echo.NewHTTPError(http.StatusUnauthorized, err)
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	// Set custom claims
-	claims := &JwtCustomClaims{
-		req.UserID,
-		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
-		},
+	return c.JSON(http.StatusOK, loginResponse{
+		ID:    user.ID,
+		Name:  user.Name,
+		Token: encodedToken,
+	})
+}
+
+func (h *Handler) LoginByName(c echo.Context) error {
+	// TODO: validation
+	// http.StatusBadRequest(400)
+	ctx := c.Request().Context()
+	req := new(LoginRequestByName)
+	if err := c.Bind(req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	// Create token with claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	// Generate encoded token and send it as response.
-	encodedToken, err := token.SignedString([]byte(GetSecret()))
+
+	user, encodedToken, err := h.LoginService.LoginByName(ctx, req.UserName, req.Password)
 	if err != nil {
+		if err == service.ErrMismatchPassword {
+			return echo.NewHTTPError(http.StatusUnauthorized, err)
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
@@ -217,7 +216,7 @@ func (h *Handler) AddItem(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	userID, err := getUserID(c)
+	userID, err := GetUserID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
@@ -444,7 +443,7 @@ func (h *Handler) AddBalance(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, req)
 	}
 
-	userID, err := getUserID(c)
+	userID, err := GetUserID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
@@ -464,7 +463,7 @@ func (h *Handler) AddBalance(c echo.Context) error {
 func (h *Handler) GetBalance(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	userID, err := getUserID(c)
+	userID, err := GetUserID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
@@ -480,7 +479,7 @@ func (h *Handler) GetBalance(c echo.Context) error {
 func (h *Handler) Purchase(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	userID, err := getUserID(c)
+	userID, err := GetUserID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
@@ -531,23 +530,23 @@ func (h *Handler) Purchase(c echo.Context) error {
 	return c.JSON(http.StatusOK, "successful")
 }
 
-func getUserID(c echo.Context) (int64, error) {
-	user := c.Get("user").(*jwt.Token)
-	if user == nil {
-		return -1, fmt.Errorf("invalid token")
-	}
-	claims := user.Claims.(*JwtCustomClaims)
-	if claims == nil {
-		return -1, fmt.Errorf("invalid token")
-	}
-
-	return claims.UserID, nil
-}
-
 func getEnv(key string, defaultValue string) string {
 	value := os.Getenv(key)
 	if value == "" {
 		return defaultValue
 	}
 	return value
+}
+
+func GetUserID(c echo.Context) (int64, error) {
+	user := c.Get("user").(*jwt.Token)
+	if user == nil {
+		return -1, fmt.Errorf("invalid token")
+	}
+	claims := user.Claims.(*service.JwtCustomClaims)
+	if claims == nil {
+		return -1, fmt.Errorf("invalid token")
+	}
+
+	return claims.UserID, nil
 }
