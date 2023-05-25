@@ -42,8 +42,7 @@ export const Header: React.FC = () => {
             Logout
           </Button>
         </div>
-        <div className="tabsWrapper">
-          <Tabs>
+          <Tabs className="is-centered">
             {tabs.map((tab) => {
               return (
                 <Tabs.Tab
@@ -58,7 +57,6 @@ export const Header: React.FC = () => {
               );
             })}
           </Tabs>
-        </div>
       </header>
     </>
   );
