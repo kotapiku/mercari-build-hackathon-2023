@@ -48,7 +48,7 @@ type getUserItemsResponse struct {
 	CategoryName string `json:"category_name"`
 }
 
-type getOnSaleItemsResponse struct {
+type getItemsResponse struct {
 	ID           int32  `json:"id"`
 	Name         string `json:"name"`
 	Price        int64  `json:"price"`
@@ -291,15 +291,15 @@ func (h *Handler) Sell(c echo.Context) error {
 	return c.JSON(http.StatusOK, "successful")
 }
 
-func (h *Handler) GetOnSaleItems(c echo.Context) error {
+func (h *Handler) getItems(c echo.Context, status domain.ItemStatus) error {
 	ctx := c.Request().Context()
 
-	items, err := h.ItemRepo.GetOnSaleItems(ctx)
+	items, err := h.ItemRepo.GetItems(ctx, status)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	var res []getOnSaleItemsResponse
+	var res []getItemsResponse
 	for _, item := range items {
 		cats, err := h.ItemRepo.GetCategories(ctx)
 		if err != nil {
@@ -307,12 +307,20 @@ func (h *Handler) GetOnSaleItems(c echo.Context) error {
 		}
 		for _, cat := range cats {
 			if cat.ID == item.CategoryID {
-				res = append(res, getOnSaleItemsResponse{ID: item.ID, Name: item.Name, Price: item.Price, CategoryName: cat.Name})
+				res = append(res, getItemsResponse{ID: item.ID, Name: item.Name, Price: item.Price, CategoryName: cat.Name})
 			}
 		}
 	}
 
 	return c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) GetOnSaleItems(c echo.Context) error {
+	return h.getItems(c, domain.ItemStatusOnSale)
+}
+
+func (h *Handler) GetSoldOutItems(c echo.Context) error {
+	return h.getItems(c, domain.ItemStatusSoldOut)
 }
 
 func (h *Handler) GetItem(c echo.Context) error {
