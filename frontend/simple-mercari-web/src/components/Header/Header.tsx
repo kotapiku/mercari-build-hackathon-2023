@@ -42,7 +42,7 @@ export const Header: React.FC = () => {
             Logout
           </Button>
         </div>
-          <Tabs className="is-centered">
+          <Tabs type="boxed" className="is-centered">
             {tabs.map((tab) => {
               return (
                 <Tabs.Tab
