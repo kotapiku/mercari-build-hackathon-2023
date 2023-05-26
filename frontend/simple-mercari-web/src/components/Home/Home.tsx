@@ -3,20 +3,15 @@ import { Signup } from "../Signup";
 import { ItemList } from "../ItemList";
 import { useCookies } from "react-cookie";
 import { MerComponent } from "../MerComponent";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 import "react-toastify/dist/ReactToastify.css";
+import { Item, useItems } from "../../common/context";
 
-interface Item {
-  id: number;
-  name: string;
-  price: number;
-  category_name: string;
-}
 export const Home = () => {
   const [cookies] = useCookies(["userID", "token"]);
-  const [items, setItems] = useState<Item[]>([]);
+  const { items, setItems } = useItems();
 
   const fetchItems = () => {
     fetcher<Item[]>(`/items`, {
