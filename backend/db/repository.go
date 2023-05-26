@@ -36,12 +36,12 @@ func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64
 		return 0, err
 	}
 
-	id, err := rst.LastInsertId()
+	lastID, err := rst.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
 
-	return id, nil
+	return lastID, nil
 }
 
 func (r *UserDBRepository) GetUser(ctx context.Context, id int64) (domain.User, error) {
@@ -66,7 +66,7 @@ func (r *UserDBRepository) UpdateBalance(ctx context.Context, id int64, balance 
 }
 
 type ItemRepository interface {
-	AddItem(ctx context.Context, item domain.Item) (domain.Item, error)
+	AddItem(ctx context.Context, item domain.Item) (int64, error)
 	GetItem(ctx context.Context, id int32) (domain.Item, error)
 	GetItemImage(ctx context.Context, id int32) ([]byte, error)
 	GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.ItemWithCategory, error)
@@ -85,20 +85,17 @@ func NewItemRepository(db *sql.DB) ItemRepository {
 	return &ItemDBRepository{DB: db}
 }
 
-func (r *ItemDBRepository) AddItem(ctx context.Context, item domain.Item) (domain.Item, error) {
+func (r *ItemDBRepository) AddItem(ctx context.Context, item domain.Item) (int64, error) {
 	rst, err := r.ExecContext(ctx, "INSERT INTO items (name, price, description, category_id, seller_id, image, status) VALUES (?, ?, ?, ?, ?, ?, ?)", item.Name, item.Price, item.Description, item.CategoryID, item.UserID, item.Image, item.Status)
 	if err != nil {
-		return domain.Item{}, err
+		return 0, err
 	}
 	lastID, err2 := rst.LastInsertId()
 	if err2 != nil {
-		return domain.Item{}, ErrConflict // idのconflictがおきたとき
+		return 0, ErrConflict // idのconflictがおきたとき
 	}
 
-	row := r.QueryRowContext(ctx, "SELECT * FROM items WHERE rowid = ?", lastID)
-
-	var res domain.Item
-	return res, row.Scan(&res.ID, &res.Name, &res.Price, &res.Description, &res.CategoryID, &res.UserID, &res.Image, &res.Status, &res.CreatedAt, &res.UpdatedAt)
+	return lastID, nil
 }
 
 func (r *ItemDBRepository) GetItem(ctx context.Context, id int32) (domain.Item, error) {
