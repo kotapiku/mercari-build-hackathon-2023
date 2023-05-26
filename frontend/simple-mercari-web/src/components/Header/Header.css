@@ -6,6 +6,8 @@ header {
 }
 
 .titleWrapper {
+  display: flex;
+  gap: 1rem;
   padding-top: 1rem;
   padding-left: 1rem;
 }
@@ -22,4 +24,9 @@ header {
   align-items: center;
   justify-content: center;
   gap: 4px;
+}
+
+.form {
+  display: flex;
+  justify-content: center;
 }
