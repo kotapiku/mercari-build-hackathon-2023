@@ -132,10 +132,8 @@ func (h *Handler) AccessLog(c echo.Context) error {
 }
 
 func isValidName(name string) bool {
-	// ユーザー名, アイテム名に使用できる文字の正規表現パターン
-	pattern := "^[a-zA-Z0-9_]+$"
-	reg := regexp.MustCompile(pattern)
-	return name != "" && reg.MatchString(name)
+	// TODO: ユーザー名, アイテム名に使用できるか
+	return true
 }
 
 func isValidPassword(password string) bool {
@@ -255,9 +253,9 @@ func (h *Handler) AddItem(c echo.Context) error {
 	if req.Price <= 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "price must be greater than 0")
 	}
-	// if !isValidName(req.Name) {
-	// 	return echo.NewHTTPError(http.StatusBadRequest, "invalid name")
-	// }
+	if !isValidName(req.Name) {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid name")
+	}
 
 	src, err := file.Open()
 	if err != nil {
