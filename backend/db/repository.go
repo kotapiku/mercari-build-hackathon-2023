@@ -28,32 +28,16 @@ var (
 )
 
 func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64, error) {
-	tx, err := r.BeginTx(ctx, nil)
+	rst, err := r.ExecContext(ctx, "INSERT OR ABORT INTO users (name, password) VALUES (?, ?)", user.Name, user.Password)
 	if err != nil {
+		if err.Error() == "UNIQUE constraint failed: users.name" {
+			return 0, ErrConflict
+		}
 		return 0, err
 	}
 
-	row := tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE name = ?", user.Name)
-	var count int
-	if err := row.Scan(&count); err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-	if count > 0 {
-		tx.Rollback()
-		return 0, errors.New("user name already exists")
-	}
-	rst, err := tx.ExecContext(ctx, "INSERT INTO users (name, password) VALUES (?, ?) ", user.Name, user.Password)
-	if err != nil {
-		tx.Rollback()
-		return 0, err
-	}
 	id, err := rst.LastInsertId()
 	if err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-	if err := tx.Commit(); err != nil {
 		return 0, err
 	}
 
@@ -125,19 +109,7 @@ func (r *ItemDBRepository) GetItem(ctx context.Context, id int32) (domain.Item, 
 }
 
 const selectItemsWithCat = `
-		SELECT
-			items.id,
-			items.name,
-			items.price,
-			items.description,
-			items.category_id,
-			items.seller_id,
-			items.image,
-			items.status,
-			items.created_at,
-			items.updated_at,
-			category.id,
-			category.name
+		SELECT *
 		FROM items
 		LEFT OUTER JOIN category
 		ON items.category_id = category.id
