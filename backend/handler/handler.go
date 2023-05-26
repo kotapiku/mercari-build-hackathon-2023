@@ -486,7 +486,7 @@ func (h *Handler) AddBalance(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 	if req.Balance <= 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, req)
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("balance must be positive"))
 	}
 
 	userID, err := GetUserID(c)
