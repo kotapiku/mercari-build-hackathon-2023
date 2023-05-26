@@ -255,9 +255,9 @@ func (h *Handler) AddItem(c echo.Context) error {
 	if req.Price <= 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "price must be greater than 0")
 	}
-	if !isValidName(req.Name) {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid name")
-	}
+	// if !isValidName(req.Name) {
+	// 	return echo.NewHTTPError(http.StatusBadRequest, "invalid name")
+	// }
 
 	src, err := file.Open()
 	if err != nil {
