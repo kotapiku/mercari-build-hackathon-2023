@@ -35,7 +35,11 @@ func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64
 
 	row := tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE name = ?", user.Name)
 	var count int
-	if err := row.Scan(&count); count > 0 || err != nil {
+	if err := row.Scan(&count); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	if count > 0 {
 		tx.Rollback()
 		return 0, errors.New("user name already exists")
 	}
