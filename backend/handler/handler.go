@@ -132,8 +132,8 @@ func (h *Handler) AccessLog(c echo.Context) error {
 }
 
 func isValidName(name string) bool {
-	// TODO: ユーザー名, アイテム名に使用できるか
-	return true
+	// ユーザー名, アイテム名に使用できるか
+	return name != ""
 }
 
 func isValidPassword(password string) bool {
