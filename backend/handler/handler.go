@@ -105,10 +105,6 @@ type loginResponse struct {
 	Token string `json:"token"`
 }
 
-type searchResponse struct {
-	Items []getItemResponse `json:"items"`
-}
-
 type Handler struct {
 	DB           *sql.DB
 	UserRepo     db.UserRepository
@@ -298,20 +294,20 @@ func (h *Handler) getItems(c echo.Context, status domain.ItemStatus) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	var res []getItemsResponse
+	itemsRsp := make([]getItemResponse, 0, len(items))
 	for _, item := range items {
-		cats, err := h.ItemRepo.GetCategories(ctx)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err)
-		}
-		for _, cat := range cats {
-			if cat.ID == item.CategoryID {
-				res = append(res, getItemsResponse{ID: item.ID, Name: item.Name, Price: item.Price, CategoryName: cat.Name})
-			}
-		}
+		itemsRsp = append(itemsRsp, getItemResponse{
+			ID:           item.Item.ID,
+			Name:         item.Item.Name,
+			CategoryID:   item.Category.ID,
+			CategoryName: item.Category.Name,
+			UserID:       item.Item.UserID,
+			Price:        item.Item.Price,
+			Description:  item.Item.Description,
+			Status:       item.Item.Status,
+		})
 	}
-
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(http.StatusOK, itemsRsp)
 }
 
 func (h *Handler) GetOnSaleItems(c echo.Context) error {
@@ -424,7 +420,7 @@ func (h *Handler) Search(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	itemsRsp := make([]getItemResponse, len(items))
+	itemsRsp := make([]getItemResponse, 0, len(items))
 	for _, item := range items {
 		itemsRsp = append(itemsRsp, getItemResponse{
 			ID:           item.Item.ID,
@@ -437,7 +433,7 @@ func (h *Handler) Search(c echo.Context) error {
 			Status:       item.Item.Status,
 		})
 	}
-	return c.JSON(http.StatusOK, searchResponse{Items: itemsRsp})
+	return c.JSON(http.StatusOK, itemsRsp)
 }
 
 func (h *Handler) AddBalance(c echo.Context) error {

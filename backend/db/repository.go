@@ -81,7 +81,7 @@ type ItemRepository interface {
 	AddItem(ctx context.Context, item domain.Item) (domain.Item, error)
 	GetItem(ctx context.Context, id int32) (domain.Item, error)
 	GetItemImage(ctx context.Context, id int32) ([]byte, error)
-	GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.Item, error)
+	GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.ItemWithCategory, error)
 	GetItemsByUserID(ctx context.Context, userID int64) ([]domain.Item, error)
 	GetCategory(ctx context.Context, id int64) (domain.Category, error)
 	GetCategories(ctx context.Context) ([]domain.Category, error)
@@ -120,9 +120,7 @@ func (r *ItemDBRepository) GetItem(ctx context.Context, id int32) (domain.Item, 
 	return item, row.Scan(&item.ID, &item.Name, &item.Price, &item.Description, &item.CategoryID, &item.UserID, &item.Image, &item.Status, &item.CreatedAt, &item.UpdatedAt)
 }
 
-func (r *ItemDBRepository) SearchItem(ctx context.Context, itemName string) ([]domain.ItemWithCategory, error) {
-	rows, err := r.QueryContext(ctx,
-		`
+const selectItemsWithCat = `
 		SELECT
 			items.id,
 			items.name,
@@ -139,15 +137,17 @@ func (r *ItemDBRepository) SearchItem(ctx context.Context, itemName string) ([]d
 		FROM items
 		LEFT OUTER JOIN category
 		ON items.category_id = category.id
-		WHERE items.name LIKE ?
-		`, "%"+itemName+"%")
+		`
+
+func (r *ItemDBRepository) SearchItem(ctx context.Context, itemName string) ([]domain.ItemWithCategory, error) {
+	rows, err := r.QueryContext(ctx, selectItemsWithCat+"WHERE items.name LIKE ?", "%"+itemName+"%")
 	if err != nil {
 		return nil, err
 	}
 
 	defer rows.Close()
 
-	var items []domain.ItemWithCategory
+	items := make([]domain.ItemWithCategory, 0)
 	for rows.Next() {
 		var item domain.Item
 		var category domain.Category
@@ -168,22 +168,23 @@ func (r *ItemDBRepository) GetItemImage(ctx context.Context, id int32) ([]byte, 
 	return image, row.Scan(&image)
 }
 
-func (r *ItemDBRepository) GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.Item, error) {
-	rows, err := r.QueryContext(ctx, "SELECT * FROM items WHERE status = ? ORDER BY updated_at desc", status)
+func (r *ItemDBRepository) GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.ItemWithCategory, error) {
+	rows, err := r.QueryContext(ctx, selectItemsWithCat+"WHERE status = ? ORDER BY updated_at desc", status)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var items []domain.Item
+	items := make([]domain.ItemWithCategory, 0)
 	for rows.Next() {
 		var item domain.Item
-		if err := rows.Scan(&item.ID, &item.Name, &item.Price, &item.Description, &item.CategoryID, &item.UserID, &item.Image, &item.Status, &item.CreatedAt, &item.UpdatedAt); err != nil {
+		var category domain.Category
+		if err := rows.Scan(&item.ID, &item.Name, &item.Price, &item.Description, &item.CategoryID, &item.UserID, &item.Image, &item.Status, &item.CreatedAt, &item.UpdatedAt, &category.ID, &category.Name); err != nil {
 			return nil, err
 		}
-		items = append(items, item)
+		items = append(items, domain.ItemWithCategory{Item: item, Category: category})
 	}
-	if err := rows.Err(); err != nil {
+	if rows.Err() != nil {
 		return nil, err
 	}
 	return items, nil
