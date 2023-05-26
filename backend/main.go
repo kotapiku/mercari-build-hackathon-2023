@@ -12,6 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/kotapiku/mercari-build-hackathon-2023/backend/db"
 	"github.com/kotapiku/mercari-build-hackathon-2023/backend/handler"
+	"github.com/kotapiku/mercari-build-hackathon-2023/backend/service"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -56,9 +57,9 @@ func run(ctx context.Context) int {
 	// jwt
 	config := echojwt.Config{
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
-			return new(handler.JwtCustomClaims)
+			return new(service.JwtCustomClaims)
 		},
-		SigningKey: []byte(handler.GetSecret()),
+		SigningKey: []byte(service.GetSecret()),
 	}
 
 	// db
@@ -70,9 +71,10 @@ func run(ctx context.Context) int {
 	defer sqlDB.Close()
 
 	h := handler.Handler{
-		DB:       sqlDB,
-		UserRepo: db.NewUserRepository(sqlDB),
-		ItemRepo: db.NewItemRepository(sqlDB),
+		DB:           sqlDB,
+		UserRepo:     db.NewUserRepository(sqlDB),
+		ItemRepo:     db.NewItemRepository(sqlDB),
+		LoginService: service.NewLoginService(sqlDB),
 	}
 
 	// Routes
@@ -80,11 +82,15 @@ func run(ctx context.Context) int {
 	e.GET("/log", h.AccessLog)
 
 	e.GET("/items", h.GetOnSaleItems)
+	e.GET("/items_sold", h.GetSoldOutItems)
 	e.GET("/items/:itemID", h.GetItem)
 	e.GET("/items/:itemID/image", h.GetImage)
 	e.GET("/items/categories", h.GetCategories)
 	e.POST("/register", h.Register)
 	e.POST("/login", h.Login)
+	e.POST("/login_name", h.LoginByName)
+
+	e.GET("/search", h.Search)
 
 	// Login required
 	l := e.Group("")

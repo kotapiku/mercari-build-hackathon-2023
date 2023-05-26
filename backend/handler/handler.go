@@ -7,12 +7,13 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/kotapiku/mercari-build-hackathon-2023/backend/db"
 	"github.com/kotapiku/mercari-build-hackathon-2023/backend/domain"
+	"github.com/kotapiku/mercari-build-hackathon-2023/backend/service"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -21,11 +22,6 @@ import (
 var (
 	logFile = getEnv("LOGFILE", "access.log")
 )
-
-type JwtCustomClaims struct {
-	UserID int64 `json:"user_id"`
-	jwt.RegisteredClaims
-}
 
 type InitializeResponse struct {
 	Message string `json:"message"`
@@ -48,7 +44,7 @@ type getUserItemsResponse struct {
 	CategoryName string `json:"category_name"`
 }
 
-type getOnSaleItemsResponse struct {
+type getItemsResponse struct {
 	ID           int32  `json:"id"`
 	Name         string `json:"name"`
 	Price        int64  `json:"price"`
@@ -94,8 +90,13 @@ type getBalanceResponse struct {
 	Balance int64 `json:"balance"`
 }
 
-type loginRequest struct {
+type LoginRequestByID struct {
 	UserID   int64  `json:"user_id"`
+	Password string `json:"password"`
+}
+
+type LoginRequestByName struct {
+	UserName string `json:"user_name"`
 	Password string `json:"password"`
 }
 
@@ -106,16 +107,10 @@ type loginResponse struct {
 }
 
 type Handler struct {
-	DB       *sql.DB
-	UserRepo db.UserRepository
-	ItemRepo db.ItemRepository
-}
-
-func GetSecret() string {
-	if secret := os.Getenv("SECRET"); secret != "" {
-		return secret
-	}
-	return "secret-key"
+	DB           *sql.DB
+	UserRepo     db.UserRepository
+	ItemRepo     db.ItemRepository
+	LoginService service.LoginService
 }
 
 func (h *Handler) Initialize(c echo.Context) error {
@@ -136,12 +131,32 @@ func (h *Handler) AccessLog(c echo.Context) error {
 	return c.File(logFile)
 }
 
+func isValidName(name string) bool {
+	// ユーザー名, アイテム名に使用できる文字の正規表現パターン
+	pattern := "^[a-zA-Z0-9_]+$"
+	reg := regexp.MustCompile(pattern)
+	return name != "" && reg.MatchString(name)
+}
+
+func isValidPassword(password string) bool {
+	// パスワードに使用できる文字の正規表現パターン
+	pattern := "^[a-zA-Z0-9!@#$%^&*]+$"
+	reg := regexp.MustCompile(pattern)
+	return password != "" && reg.MatchString(password)
+}
+
 func (h *Handler) Register(c echo.Context) error {
-	// TODO: validation
-	// http.StatusBadRequest(400)
 	req := new(registerRequest)
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	// validation
+	if !isValidName(req.Name) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid username"))
+	}
+	if !isValidPassword(req.Password) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid password"))
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -162,37 +177,51 @@ func (h *Handler) Register(c echo.Context) error {
 
 func (h *Handler) Login(c echo.Context) error {
 	ctx := c.Request().Context()
-	// TODO: validation
-	// http.StatusBadRequest(400)
-	req := new(loginRequest)
+	req := new(LoginRequestByID)
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	user, err := h.UserRepo.GetUser(ctx, req.UserID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	// validation
+	if !isValidPassword(req.Password) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid password"))
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
+	user, encodedToken, err := h.LoginService.LoginByID(ctx, req.UserID, req.Password)
+	if err != nil {
+		if err == service.ErrMismatchPassword {
 			return echo.NewHTTPError(http.StatusUnauthorized, err)
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	// Set custom claims
-	claims := &JwtCustomClaims{
-		req.UserID,
-		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
-		},
+	return c.JSON(http.StatusOK, loginResponse{
+		ID:    user.ID,
+		Name:  user.Name,
+		Token: encodedToken,
+	})
+}
+
+func (h *Handler) LoginByName(c echo.Context) error {
+	ctx := c.Request().Context()
+	req := new(LoginRequestByName)
+	if err := c.Bind(req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	// Create token with claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	// Generate encoded token and send it as response.
-	encodedToken, err := token.SignedString([]byte(GetSecret()))
+
+	// validation
+	if !isValidName(req.UserName) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid username"))
+	}
+	if !isValidPassword(req.Password) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid password"))
+	}
+
+	user, encodedToken, err := h.LoginService.LoginByName(ctx, req.UserName, req.Password)
 	if err != nil {
+		if err == service.ErrMismatchPassword {
+			return echo.NewHTTPError(http.StatusUnauthorized, err)
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
@@ -204,8 +233,6 @@ func (h *Handler) Login(c echo.Context) error {
 }
 
 func (h *Handler) AddItem(c echo.Context) error {
-	// TODO: validation
-	// http.StatusBadRequest(400)
 	ctx := c.Request().Context()
 
 	req := new(addItemRequest)
@@ -213,13 +240,23 @@ func (h *Handler) AddItem(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	userID, err := getUserID(c)
+	userID, err := GetUserID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
 	file, err := c.FormFile("image")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	// validation
+	if file.Size > 1<<20 {
+		return echo.NewHTTPError(http.StatusBadRequest, "file size is too large (> 1MB)")
+	}
+	if req.Price <= 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "price must be greater than 0")
+	}
+	if !isValidName(req.Name) {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid name")
 	}
 
 	src, err := file.Open()
@@ -230,8 +267,7 @@ func (h *Handler) AddItem(c echo.Context) error {
 
 	var dest []byte
 	blob := bytes.NewBuffer(dest)
-	// TODO: pass very big file
-	// http.StatusBadRequest(400)
+
 	if _, err := io.Copy(blob, src); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
@@ -276,10 +312,17 @@ func (h *Handler) Sell(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	// TODO: check req.UserID and item.UserID
-	// http.StatusPreconditionFailed(412)
-	// TODO: only update when status is initial
-	// http.StatusPreconditionFailed(412)
+	userID, err := GetUserID(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+	if item.UserID != userID {
+		return echo.NewHTTPError(http.StatusPreconditionFailed, "can not sell other's item")
+	}
+	if item.Status != domain.ItemStatusInitial {
+		return echo.NewHTTPError(http.StatusPreconditionFailed, "invalid item status")
+	}
+
 	if err := h.ItemRepo.UpdateItemStatus(ctx, item.ID, domain.ItemStatusOnSale); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
@@ -287,28 +330,36 @@ func (h *Handler) Sell(c echo.Context) error {
 	return c.JSON(http.StatusOK, "successful")
 }
 
-func (h *Handler) GetOnSaleItems(c echo.Context) error {
+func (h *Handler) getItems(c echo.Context, status domain.ItemStatus) error {
 	ctx := c.Request().Context()
 
-	items, err := h.ItemRepo.GetOnSaleItems(ctx)
+	items, err := h.ItemRepo.GetItems(ctx, status)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	var res []getOnSaleItemsResponse
+	itemsRsp := make([]getItemResponse, 0, len(items))
 	for _, item := range items {
-		cats, err := h.ItemRepo.GetCategories(ctx)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err)
-		}
-		for _, cat := range cats {
-			if cat.ID == item.CategoryID {
-				res = append(res, getOnSaleItemsResponse{ID: item.ID, Name: item.Name, Price: item.Price, CategoryName: cat.Name})
-			}
-		}
+		itemsRsp = append(itemsRsp, getItemResponse{
+			ID:           item.Item.ID,
+			Name:         item.Item.Name,
+			CategoryID:   item.Category.ID,
+			CategoryName: item.Category.Name,
+			UserID:       item.Item.UserID,
+			Price:        item.Item.Price,
+			Description:  item.Item.Description,
+			Status:       item.Item.Status,
+		})
 	}
+	return c.JSON(http.StatusOK, itemsRsp)
+}
 
-	return c.JSON(http.StatusOK, res)
+func (h *Handler) GetOnSaleItems(c echo.Context) error {
+	return h.getItems(c, domain.ItemStatusOnSale)
+}
+
+func (h *Handler) GetSoldOutItems(c echo.Context) error {
+	return h.getItems(c, domain.ItemStatusSoldOut)
 }
 
 func (h *Handler) GetItem(c echo.Context) error {
@@ -328,16 +379,17 @@ func (h *Handler) GetItem(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, getItemResponse{
-		ID:           item.ID,
-		Name:         item.Name,
-		CategoryID:   item.CategoryID,
-		CategoryName: category.Name,
-		UserID:       item.UserID,
-		Price:        item.Price,
-		Description:  item.Description,
-		Status:       item.Status,
-	})
+	return c.JSON(http.StatusOK,
+		getItemResponse{
+			ID:           item.ID,
+			Name:         item.Name,
+			CategoryID:   item.CategoryID,
+			CategoryName: category.Name,
+			UserID:       item.UserID,
+			Price:        item.Price,
+			Description:  item.Description,
+			Status:       item.Status,
+		})
 }
 
 func (h *Handler) GetUserItems(c echo.Context) error {
@@ -388,19 +440,42 @@ func (h *Handler) GetCategories(c echo.Context) error {
 func (h *Handler) GetImage(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	// TODO: overflow
 	itemID, err := strconv.ParseInt(c.Param("itemID"), 10, 32)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "invalid itemID type")
 	}
 
-	// オーバーフローしていると。ここのint32(itemID)がバグって正常に処理ができないはず
 	data, err := h.ItemRepo.GetItemImage(ctx, int32(itemID))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	return c.Blob(http.StatusOK, "image/jpeg", data)
+}
+
+func (h *Handler) Search(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	itemName := c.QueryParam("name")
+	items, err := h.ItemRepo.SearchItem(ctx, itemName)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	itemsRsp := make([]getItemResponse, 0, len(items))
+	for _, item := range items {
+		itemsRsp = append(itemsRsp, getItemResponse{
+			ID:           item.Item.ID,
+			Name:         item.Item.Name,
+			CategoryID:   item.Category.ID,
+			CategoryName: item.Category.Name,
+			UserID:       item.Item.UserID,
+			Price:        item.Item.Price,
+			Description:  item.Item.Description,
+			Status:       item.Item.Status,
+		})
+	}
+	return c.JSON(http.StatusOK, itemsRsp)
 }
 
 func (h *Handler) AddBalance(c echo.Context) error {
@@ -414,7 +489,7 @@ func (h *Handler) AddBalance(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, req)
 	}
 
-	userID, err := getUserID(c)
+	userID, err := GetUserID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
@@ -434,7 +509,7 @@ func (h *Handler) AddBalance(c echo.Context) error {
 func (h *Handler) GetBalance(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	userID, err := getUserID(c)
+	userID, err := GetUserID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
@@ -450,7 +525,7 @@ func (h *Handler) GetBalance(c echo.Context) error {
 func (h *Handler) Purchase(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	userID, err := getUserID(c)
+	userID, err := GetUserID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err)
 	}
@@ -478,7 +553,7 @@ func (h *Handler) Purchase(c echo.Context) error {
 
 	// 売買が成立するかどうかの判定
 	if item.Status != domain.ItemStatusOnSale {
-		return echo.NewHTTPError(http.StatusPreconditionFailed, "item status is not on sale")
+		return echo.NewHTTPError(http.StatusPreconditionFailed, "item is not on sale")
 	}
 	if user.Balance < item.Price {
 		return echo.NewHTTPError(http.StatusPreconditionFailed, "balance is not enough")
@@ -501,23 +576,23 @@ func (h *Handler) Purchase(c echo.Context) error {
 	return c.JSON(http.StatusOK, "successful")
 }
 
-func getUserID(c echo.Context) (int64, error) {
-	user := c.Get("user").(*jwt.Token)
-	if user == nil {
-		return -1, fmt.Errorf("invalid token")
-	}
-	claims := user.Claims.(*JwtCustomClaims)
-	if claims == nil {
-		return -1, fmt.Errorf("invalid token")
-	}
-
-	return claims.UserID, nil
-}
-
 func getEnv(key string, defaultValue string) string {
 	value := os.Getenv(key)
 	if value == "" {
 		return defaultValue
 	}
 	return value
+}
+
+func GetUserID(c echo.Context) (int64, error) {
+	user := c.Get("user").(*jwt.Token)
+	if user == nil {
+		return -1, fmt.Errorf("invalid token")
+	}
+	claims := user.Claims.(*service.JwtCustomClaims)
+	if claims == nil {
+		return -1, fmt.Errorf("invalid token")
+	}
+
+	return claims.UserID, nil
 }
