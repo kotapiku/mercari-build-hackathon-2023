@@ -41,7 +41,7 @@ func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64
 	}
 	if count > 0 {
 		tx.Rollback()
-		return 0, errors.New("user name already exists")
+		return 0, ErrConflict
 	}
 	rst, err := tx.ExecContext(ctx, "INSERT INTO users (name, password) VALUES (?, ?) ", user.Name, user.Password)
 	if err != nil {
