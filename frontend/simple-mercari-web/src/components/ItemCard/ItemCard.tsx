@@ -10,7 +10,7 @@ interface Item {
   category_name: string;
 }
 
-export const Item: React.FC<{ item: Item }> = ({ item }) => {
+export const ItemCard: React.FC<{ item: Item }> = ({ item }) => {
   const navigate = useNavigate();
   const [itemImage, setItemImage] = useState<string>("");
   const [cookies] = useCookies(["token"]);
