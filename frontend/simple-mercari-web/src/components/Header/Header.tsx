@@ -37,21 +37,23 @@ export const Header: React.FC = () => {
   };
 
   const search = async () => {
-    fetcher<Item[]>(`/search?name=${keyWord}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((data) => {
-        console.log("GET success:", data);
-        setItems(data);
+    if (keyWord) {
+      fetcher<Item[]>(`/search?name=${keyWord}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       })
-      .catch((err) => {
-        console.log(`GET error:`, err);
-        toast.error(err.message);
-      });
+        .then((data) => {
+          console.log("GET success:", data);
+          setItems(data);
+        })
+        .catch((err) => {
+          console.log(`GET error:`, err);
+          toast.error(err.message);
+        });
+    }
   };
 
   const [activeTab, setActiveTab] = useState(() => {
