@@ -32,6 +32,24 @@ export const Header: React.FC = () => {
     return localStorage.getItem("activeTab") || "Home";
   });
 
+  const tab = (
+    <Tabs type="boxed" className="is-centered is-medium">
+      {tabs.map((tab) => {
+        return (
+          <Tabs.Tab
+            active={activeTab === tab.name}
+            onClick={() => handleTabClick(tab.name, tab.to)}
+          >
+            <div className="tabItem">
+              {tab.icon}
+              <span>{tab.name}</span>
+            </div>
+          </Tabs.Tab>
+        );
+      })}
+    </Tabs>
+  );
+
   return (
     <>
       <header>
@@ -45,21 +63,7 @@ export const Header: React.FC = () => {
             Logout
           </Button>
         </div>
-        <Tabs type="boxed" className="is-centered is-medium">
-          {tabs.map((tab) => {
-            return (
-              <Tabs.Tab
-                active={activeTab === tab.name}
-                onClick={() => handleTabClick(tab.name, tab.to)}
-              >
-                <div className="tabItem">
-                  {tab.icon}
-                  <span>{tab.name}</span>
-                </div>
-              </Tabs.Tab>
-            );
-          })}
-        </Tabs>
+        {cookies.token ? tab : <></>};
       </header>
     </>
   );

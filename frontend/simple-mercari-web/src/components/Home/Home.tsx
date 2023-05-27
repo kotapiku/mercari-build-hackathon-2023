@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 import "react-toastify/dist/ReactToastify.css";
+import { MerComponent } from "../MerComponent";
 
 interface Item {
   id: number;
@@ -71,7 +72,10 @@ export const Home = () => {
     </>
   );
 
-  const itemListPage = <ItemList items={items} items_sold={items_sold} />;
-
+  const itemListPage = (
+    <MerComponent>
+      <ItemList items={items} items_sold={items_sold} />
+    </MerComponent>
+  );
   return <>{cookies.token ? itemListPage : signUpAndSignInPage}</>;
 };

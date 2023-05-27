@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import { useCookies } from "react-cookie";
 import { NotFound } from "../NotFound";
+import { Container } from "react-bulma-components";
 
 interface Prop {
   condition?: () => boolean;
@@ -17,9 +18,5 @@ export const MerComponent: React.FC<Prop> = (props) => {
   ) {
     return <NotFound />;
   }
-  return (
-    <>
-      {props.children}
-    </>
-  );
+  return <Container className="p-2">{props.children}</Container>;
 };

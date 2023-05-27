@@ -16,7 +16,7 @@ interface Prop {
 
 export const ItemList: React.FC<Prop> = (props) => {
   return (
-    <Columns className="m-1">
+    <Columns>
       {props.items &&
         props.items.map((item) => {
           return <Item item={item} key={item.id} />;
