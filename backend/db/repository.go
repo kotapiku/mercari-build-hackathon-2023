@@ -28,20 +28,36 @@ var (
 )
 
 func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64, error) {
-	rst, err := r.ExecContext(ctx, "INSERT OR ABORT INTO users (name, password) VALUES (?, ?)", user.Name, user.Password)
-	if err != nil {
-		if err.Error() == "UNIQUE constraint failed: users.name" {
-			return 0, ErrConflict
-		}
-		return 0, err
-	}
-
-	lastID, err := rst.LastInsertId()
+	tx, err := r.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, err
 	}
 
-	return lastID, nil
+	row := tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE name = ?", user.Name)
+	var count int
+	if err := row.Scan(&count); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	if count > 0 {
+		tx.Rollback()
+		return 0, ErrConflict
+	}
+	rst, err := tx.ExecContext(ctx, "INSERT INTO users (name, password) VALUES (?, ?) ", user.Name, user.Password)
+	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	id, err := rst.LastInsertId()
+	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
 func (r *UserDBRepository) GetUser(ctx context.Context, id int64) (domain.User, error) {
