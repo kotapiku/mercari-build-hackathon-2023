@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ItemList } from "../ItemList";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
-import { Item } from "../../common/context";
+import { Item } from "../../common/types";
 
 export const Search: React.FC = () => {
   const location = useLocation();

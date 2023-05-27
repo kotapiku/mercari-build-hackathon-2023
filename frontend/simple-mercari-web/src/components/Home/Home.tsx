@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 import "react-toastify/dist/ReactToastify.css";
-import { Item} from "../../common/context";
+import { Item} from "../../common/types";
 
 export const Home = () => {
   const [cookies] = useCookies(["userID", "token"]);
