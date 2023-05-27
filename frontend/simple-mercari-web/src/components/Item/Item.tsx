@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import { fetcherBlob } from "../../helper";
+import "bulma/css/bulma.min.css";
+import { Card, Media, Heading, Content, Columns } from "react-bulma-components";
+import { FaYenSign, FaHashtag } from "react-icons/fa";
 
 interface Item {
   id: number;
@@ -9,7 +12,6 @@ interface Item {
   price: number;
   category_name: string;
 }
-
 export const Item: React.FC<{ item: Item }> = ({ item }) => {
   const navigate = useNavigate();
   const [itemImage, setItemImage] = useState<string>("");
@@ -36,21 +38,38 @@ export const Item: React.FC<{ item: Item }> = ({ item }) => {
   }, [item]);
 
   return (
-    <div>
-      <h3>{item.name}</h3>
-      <img
-        src={itemImage}
-        alt={item.name}
-        height={480}
-        width={480}
-        onClick={() => navigate(`/item/${item.id}`)}
-      />
-      <p>
-        <span>Category: {item.category_name}</span>
-        <br />
-        <span>Price: {item.price}</span>
-        <br />
-      </p>
-    </div>
+    <Columns.Column size={4}>
+      <Card>
+        <Card.Image
+          size="1by1"
+          src={itemImage}
+          onClick={() => navigate(`/item/${item.id}`)}
+        />
+        <Card.Content>
+          <Media>
+            <Media.Item>
+              <Heading size={4}>{item.name}</Heading>
+            </Media.Item>
+            <Media.Item>
+              <Content>
+                <p>
+                  <span>
+                    <FaHashtag style={{ verticalAlign: -2 }} />
+                    {/* <FaHashtag /> */}
+                    {item.category_name}
+                  </span>
+                  <br />
+                  <span>
+                    <FaYenSign style={{ verticalAlign: -2 }} />
+                    {item.price}
+                  </span>
+                  <br />
+                </p>
+              </Content>
+            </Media.Item>
+          </Media>
+        </Card.Content>
+      </Card>
+    </Columns.Column>
   );
 };

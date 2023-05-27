@@ -6,16 +6,16 @@ import { UserProfile } from "./components/UserProfile";
 import { Listing } from "./components/Listing";
 import "./App.css";
 import { Header } from "./components/Header/Header";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const App: React.VFC = () => {
   return (
     <>
-      <ToastContainer position="bottom-center"/>
+      <ToastContainer position="bottom-center" />
 
       <BrowserRouter>
-        <div className="MerComponent">
+        <div>
           <Header></Header>
           <Routes>
             <Route index element={<Home />} />

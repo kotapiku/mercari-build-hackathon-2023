@@ -91,7 +91,7 @@ export const UserProfile: React.FC = () => {
               name="balance"
               id="MerTextInput"
               placeholder="0"
-              min = "0"
+              min="0"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setAddedBalance(Number(e.target.value));
               }}
@@ -104,7 +104,7 @@ export const UserProfile: React.FC = () => {
 
           <div>
             <h2>Item List</h2>
-            {<ItemList items={items} />}
+            {<ItemList items={items} items_sold={[]} />}
           </div>
         </div>
       </div>
