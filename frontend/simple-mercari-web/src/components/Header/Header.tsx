@@ -48,6 +48,7 @@ export const Header: React.FC = () => {
         .then((data) => {
           console.log("GET success:", data);
           setItems(data);
+          localStorage.setItem("searchResult", JSON.stringify(data));
         })
         .catch((err) => {
           console.log(`GET error:`, err);
