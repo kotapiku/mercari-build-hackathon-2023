@@ -14,25 +14,35 @@ export const Home = () => {
   const { items, setItems } = useItems();
 
   const fetchItems = () => {
-    fetcher<Item[]>(`/items`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((data) => {
-        console.log("GET success:", data);
-        setItems(data);
+    const searchResult = localStorage.getItem("searchResult");
+    if (searchResult) {
+      const data = JSON.parse(searchResult);
+      console.log("Loaded search result:", data);
+      setItems(data);
+    } else {
+      fetcher<Item[]>(`/items`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       })
-      .catch((err) => {
-        console.log(`GET error:`, err);
-        toast.error(err.message);
-      });
+        .then((data) => {
+          console.log("GET success:", data);
+          setItems(data);
+        })
+        .catch((err) => {
+          console.log(`GET error:`, err);
+          toast.error(err.message);
+        });
+    }
   };
 
   useEffect(() => {
     fetchItems();
+    // return () => {
+    //   localStorage.removeItem("searchResult");
+    // };
   }, []);
 
   const signUpAndSignInPage = (
