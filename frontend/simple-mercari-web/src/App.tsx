@@ -8,13 +8,11 @@ import "./App.css";
 import { Header } from "./components/Header/Header";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ItemsProvider } from "./common/context";
 import { Search } from "./components/Search";
 
 export const App: React.VFC = () => {
   return (
     <>
-      <ItemsProvider>
         <ToastContainer position="bottom-center" />
 
         <BrowserRouter>
@@ -29,7 +27,6 @@ export const App: React.VFC = () => {
             </Routes>
           </div>
         </BrowserRouter>
-      </ItemsProvider>
     </>
   );
 };
