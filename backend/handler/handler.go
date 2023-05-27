@@ -38,11 +38,11 @@ type registerResponse struct {
 }
 
 type getUserItemsResponse struct {
-	ID           int32  `json:"id"`
-	Name         string `json:"name"`
-	Price        int64  `json:"price"`
-	CategoryName string `json:"category_name"`
-	Status       int64  `json:"status"`
+	ID           int32             `json:"id"`
+	Name         string            `json:"name"`
+	Price        int64             `json:"price"`
+	CategoryName string            `json:"category_name"`
+	Status       domain.ItemStatus `json:"status"`
 }
 
 type getItemsResponse struct {
