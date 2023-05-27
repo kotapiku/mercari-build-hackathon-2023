@@ -5,28 +5,28 @@ import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 
 export const Login = () => {
-  const [userID, setUserID] = useState<number>();
+  const [username, setUsername] = useState<string>();
   const [password, setPassword] = useState<string>();
-  const [_, setCookie] = useCookies(["userID", "token"]);
+  const [_, setCookie] = useCookies(["name", "token"]);
 
   const navigate = useNavigate();
 
   const onSubmit = (_: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    fetcher<{ id: number; name: string; token: string }>(`/login`, {
+    fetcher<{ id: number; name: string; token: string }>(`/login_name`, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        user_id: userID,
+        user_name: username,
         password: password,
       }),
     })
       .then((user) => {
         toast.success("Signed in!");
         console.log("POST success:", user.id);
-        setCookie("userID", user.id);
+        setCookie("name", user.name);
         setCookie("token", user.token);
         navigate("/");
       })
@@ -46,7 +46,7 @@ export const Login = () => {
           id="MerTextInput"
           placeholder="name"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setUserID(Number(e.target.value));
+            setUsername(String(e.target.value));
           }}
           required
         />
