@@ -3,17 +3,17 @@ import { useEffect, useState } from "react";
 import { ItemList } from "../ItemList";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
-import { Item, useItems } from "../../common/context";
+import { Item } from "../../common/context";
 
 export const Search: React.FC = () => {
   const location = useLocation();
-  const { items, setItems } = useItems();
+  const [searchResult, setSearchResult] = useState([] as Item[]);
   const [loading, setLoading] = useState(false);
 
   const fetchItems = () => {
     const keyword = new URLSearchParams(location.search).get("keyword");
     if (keyword) {
-      fetcher<Item[]>(`/search?keyword=${keyword}`, {
+      fetcher<Item[]>(`/search?name=${keyword}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -22,7 +22,7 @@ export const Search: React.FC = () => {
       })
         .then((data) => {
           console.log("GET success:", data);
-          setItems(data);
+          setSearchResult(data);
           setLoading(false);
         })
         .catch((err) => {
@@ -39,9 +39,9 @@ export const Search: React.FC = () => {
 
   if (loading) {
     return <div>Loading...</div>;
-  } else if (!items) {
+  } else if (!searchResult) {
     return <div>No search result.</div>;
   } else {
-    return <ItemList items={items} />;
+    return <ItemList items={searchResult} />;
   }
 };
