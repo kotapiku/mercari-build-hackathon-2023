@@ -3,23 +3,17 @@ import { Signup } from "../Signup";
 import { ItemList } from "../ItemList";
 import { useCookies } from "react-cookie";
 import { MerComponent } from "../MerComponent";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 import "react-toastify/dist/ReactToastify.css";
-import { Item, useItems } from "../../common/context";
+import { Item} from "../../common/context";
 
 export const Home = () => {
   const [cookies] = useCookies(["userID", "token"]);
-  const { items, setItems } = useItems();
+  const [ items, setItems ] = useState([] as Item[]);
 
   const fetchItems = () => {
-    const searchResult = localStorage.getItem("searchResult");
-    if (searchResult) {
-      const data = JSON.parse(searchResult);
-      console.log("Loaded search result:", data);
-      setItems(data);
-    } else {
       fetcher<Item[]>(`/items`, {
         method: "GET",
         headers: {
@@ -35,14 +29,10 @@ export const Home = () => {
           console.log(`GET error:`, err);
           toast.error(err.message);
         });
-    }
   };
 
   useEffect(() => {
     fetchItems();
-    // return () => {
-    //   localStorage.removeItem("searchResult");
-    // };
   }, []);
 
   const signUpAndSignInPage = (

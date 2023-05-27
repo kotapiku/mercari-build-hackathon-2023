@@ -5,10 +5,6 @@ import { FaCamera, FaHome, FaUser, FaSearch } from "react-icons/fa";
 import { Button, Heading, Tabs, Form } from "react-bulma-components";
 import "bulma/css/bulma.min.css";
 import { useState } from "react";
-import { fetcher } from "../../helper";
-import { Item } from "../../common/context";
-import { useItems } from "../../common/context";
-import { toast } from "react-toastify";
 
 export const Header: React.FC = () => {
   const [cookies, _, removeCookie] = useCookies(["userID", "token"]);
@@ -22,7 +18,6 @@ export const Header: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const { setItems } = useItems();
 
   const tabs = [
     { name: "Home", icon: <FaHome />, to: "/" },
@@ -38,25 +33,8 @@ export const Header: React.FC = () => {
 
   const search = async () => {
     if (keyWord) {
-      fetcher<Item[]>(`/search?name=${keyWord}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      })
-        .then((data) => {
-          console.log("GET success:", data);
-          setItems(data);
-          localStorage.setItem("searchResult", JSON.stringify(data));
-        })
-        .catch((err) => {
-          console.log(`GET error:`, err);
-          toast.error(err.message);
-        });
+      navigate(`/search?keyword=${keyWord}`);
     }
-
-    navigate(`/search`);
   };
 
   const [activeTab, setActiveTab] = useState(() => {
