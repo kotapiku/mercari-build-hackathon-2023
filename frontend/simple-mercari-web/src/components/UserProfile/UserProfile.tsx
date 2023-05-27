@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { MerComponent } from "../MerComponent";
 import { ItemList } from "../ItemList";
 import { fetcher } from "../../helper";
-import { Button, Icon, Form } from "react-bulma-components";
+import { Container, Button, Icon, Form } from "react-bulma-components";
 import { FaYenSign } from "react-icons/fa";
 
 interface Item {
@@ -83,27 +83,33 @@ export const UserProfile: React.FC = () => {
 
   return (
     <MerComponent>
-      <Form.Field>
-        <Form.Label>Balance: {balance}</Form.Label>
-        <Form.Control>
-          <Form.Input
-            type="number"
-            name="balance"
-            placeholder="0"
-            min="0"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setAddedBalance(Number(e.target.value));
-            }}
-            required
-          />
-          <Icon align="left" size="small">
-            <FaYenSign style={{ verticalAlign: -2 }} />
-          </Icon>
-        </Form.Control>
-        <Button onClick={onBalanceSubmit} id="MerButton">
-          Add balance
-        </Button>
-      </Form.Field>
+      <Container className="p-2">
+        <div className="columns is-centered">
+          <div className="column is-5">
+            <Form.Field>
+              <Form.Label>Balance: {balance}</Form.Label>
+              <Form.Control>
+                <Form.Input
+                  type="number"
+                  name="balance"
+                  placeholder="0"
+                  min="0"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setAddedBalance(Number(e.target.value));
+                  }}
+                  required
+                />
+                <Icon align="left" size="small">
+                  <FaYenSign style={{ verticalAlign: -2 }} />
+                </Icon>
+              </Form.Control>
+              <Button onClick={onBalanceSubmit} id="MerButton">
+                Add balance
+              </Button>
+            </Form.Field>
+          </div>
+        </div>
+      </Container>
 
       <ItemList items={items} items_sold={[]} />
     </MerComponent>

@@ -63,7 +63,7 @@ export const Header: React.FC = () => {
             Logout
           </Button>
         </div>
-        {cookies.token ? tab : <></>};
+        {cookies.token ? tab : <></>}
       </header>
     </>
   );

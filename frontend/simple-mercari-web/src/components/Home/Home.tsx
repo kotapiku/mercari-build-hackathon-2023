@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 import "react-toastify/dist/ReactToastify.css";
 import { MerComponent } from "../MerComponent";
+import { Container } from "react-bulma-components";
 
 interface Item {
   id: number;
@@ -61,15 +62,18 @@ export const Home = () => {
   }, []);
 
   const signUpAndSignInPage = (
-    <>
-      <div>
-        <Signup />
+    <Container className="p-2">
+      <div className="columns is-centered">
+        <div className="column is-4">
+          <Signup />
+        </div>
       </div>
-      or
-      <div>
-        <Login />
+      <div className="columns is-centered">
+        <div className="column is-4">
+          <Login />
+        </div>
       </div>
-    </>
+    </Container>
   );
 
   const itemListPage = (

@@ -41,6 +41,7 @@ export const Signup = () => {
       <div className="Signup">
         <label id="MerInputLabel">User Name</label>
         <input
+          className="is-fullwidth"
           type="text"
           name="name"
           id="MerTextInput"
@@ -64,8 +65,10 @@ export const Signup = () => {
           Signup
         </button>
         {userID ? (
-          <p>Use "{userID}" as UserID for login<br></br>
-          You have successfully registered!</p>
+          <p>
+            Use "{userID}" as UserID for login<br></br>
+            You have successfully registered!
+          </p>
         ) : null}
       </div>
     </div>
