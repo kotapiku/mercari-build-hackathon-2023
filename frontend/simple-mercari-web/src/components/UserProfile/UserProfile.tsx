@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useCookies } from "react-cookie";
 import { useParams } from "react-router-dom";
-import { MerComponent } from "../MerComponent";
 import { toast } from "react-toastify";
 import { ItemList } from "../ItemList";
 import { fetcher } from "../../helper";
+import { Container, Button, Icon, Form } from "react-bulma-components";
+import { FaYenSign } from "react-icons/fa";
 
 interface Item {
   id: number;
@@ -80,35 +81,31 @@ export const UserProfile: React.FC = () => {
   };
 
   return (
-    <MerComponent>
-      <div className="UserProfile">
-        <div>
-          <div>
-            <h2>
-              <span>Balance: {balance}</span>
-            </h2>
-            <input
-              type="number"
-              name="balance"
-              id="MerTextInput"
-              placeholder="0"
-              min="0"
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setAddedBalance(Number(e.target.value));
-              }}
-              required
-            />
-            <button onClick={onBalanceSubmit} id="MerButton">
-              Add balance
-            </button>
-          </div>
+    <Container>
+      <Form.Field>
+        <Form.Label>Balance: {balance}</Form.Label>
+        <Form.Control>
+          <Form.Input
+            type="number"
+            name="balance"
+            color="success"
+            placeholder="0"
+            min="0"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setAddedBalance(Number(e.target.value));
+            }}
+            required
+          />
+          <Icon align="left" size="small">
+            <FaYenSign style={{ verticalAlign: -2 }} />
+          </Icon>
+        </Form.Control>
+        <Button onClick={onBalanceSubmit} id="MerButton">
+          Add balance
+        </Button>
+      </Form.Field>
 
-          <div>
-            <h2>Item List</h2>
-            {<ItemList items={items} items_sold={[]} />}
-          </div>
-        </div>
-      </div>
-    </MerComponent>
+      <ItemList items={items} items_sold={[]} />
+    </Container>
   );
 };

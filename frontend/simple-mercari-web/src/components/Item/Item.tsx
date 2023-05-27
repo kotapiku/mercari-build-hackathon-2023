@@ -40,13 +40,13 @@ export const Item: React.FC<{ item: Item }> = ({ item }) => {
 
   return (
     <Columns.Column size={4}>
-      <Card className={item.status == 2 ? "OnSale" : "SoldOut"}>
+      <Card className={item.status == 3 ? "SoldOut" : "OnSale"}>
         <Card.Image
           size="1by1"
           src={itemImage}
           onClick={() => navigate(`/item/${item.id}`)}
         />
-        <Card.Content className={item.status == 2 ? "" : "SoldOutContent"}>
+        <Card.Content className={item.status == 3 ? "SoldOutContent" : ""}>
           <Media>
             <Media.Item>
               <Heading size={4}>{item.name}</Heading>
@@ -56,7 +56,6 @@ export const Item: React.FC<{ item: Item }> = ({ item }) => {
                 <p>
                   <span>
                     <FaHashtag style={{ verticalAlign: -2 }} />
-                    {/* <FaHashtag /> */}
                     {item.category_name}
                   </span>
                   <br />

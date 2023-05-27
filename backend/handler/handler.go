@@ -42,6 +42,7 @@ type getUserItemsResponse struct {
 	Name         string `json:"name"`
 	Price        int64  `json:"price"`
 	CategoryName string `json:"category_name"`
+	Status       int64  `json:"status"`
 }
 
 type getItemsResponse struct {
@@ -411,7 +412,7 @@ func (h *Handler) GetUserItems(c echo.Context) error {
 		}
 		for _, cat := range cats {
 			if cat.ID == item.CategoryID {
-				res = append(res, getUserItemsResponse{ID: item.ID, Name: item.Name, Price: item.Price, CategoryName: cat.Name})
+				res = append(res, getUserItemsResponse{ID: item.ID, Name: item.Name, Price: item.Price, CategoryName: cat.Name, Status: item.Status})
 			}
 		}
 	}
