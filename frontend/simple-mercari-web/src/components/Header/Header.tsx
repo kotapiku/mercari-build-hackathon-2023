@@ -1,23 +1,23 @@
 import { useCookies } from "react-cookie";
 import "./Header.css";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FaCamera, FaHome, FaUser, FaSearch } from "react-icons/fa";
 import { Button, Heading, Tabs, Form } from "react-bulma-components";
 import "bulma/css/bulma.min.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const Header: React.FC = () => {
   const [cookies, _, removeCookie] = useCookies(["userID", "token"]);
   const [keyWord, setKeyWord] = useState("");
+  const [activeTab, setActiveTab] = useState("Home");
+
+  const navigate = useNavigate();
 
   const onLogout = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault();
     removeCookie("userID");
     removeCookie("token");
   };
-
-  const navigate = useNavigate();
-
 
   const tabs = [
     { name: "Home", icon: <FaHome />, to: "/" },
@@ -26,8 +26,6 @@ export const Header: React.FC = () => {
   ];
 
   const handleTabClick = (tabName: string, to: string) => {
-    setActiveTab(tabName);
-    localStorage.setItem("activeTab", tabName);
     navigate(to);
   };
 
@@ -37,9 +35,17 @@ export const Header: React.FC = () => {
     }
   };
 
-  const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("activeTab") || "Home";
-  });
+  const location = useLocation();
+
+  useEffect(() => {
+    // identify active tab and set it to state
+    const currentTab = tabs.find((tab) => tab.to === location.pathname);
+    if (currentTab) {
+      setActiveTab(currentTab.name);
+    } else {
+      setActiveTab("Home");
+    }
+  }, [location]);
 
   return (
     <>
