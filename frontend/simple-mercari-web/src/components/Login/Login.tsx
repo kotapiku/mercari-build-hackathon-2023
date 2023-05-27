@@ -7,7 +7,7 @@ import { fetcher } from "../../helper";
 export const Login = () => {
   const [username, setUsername] = useState<string>();
   const [password, setPassword] = useState<string>();
-  const [_, setCookie] = useCookies(["name", "token"]);
+  const [_, setCookie] = useCookies(["userID", "token"]);
 
   const navigate = useNavigate();
 
@@ -26,7 +26,7 @@ export const Login = () => {
       .then((user) => {
         toast.success("Signed in!");
         console.log("POST success:", user.id);
-        setCookie("name", user.name);
+        setCookie("userID", user.id);
         setCookie("token", user.token);
         navigate("/");
       })
@@ -42,7 +42,7 @@ export const Login = () => {
         <label id="MerInputLabel">User Name</label>
         <input
           type="text"
-          name="name"
+          name="username"
           id="MerTextInput"
           placeholder="name"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
