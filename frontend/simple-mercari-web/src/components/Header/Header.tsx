@@ -55,6 +55,8 @@ export const Header: React.FC = () => {
           toast.error(err.message);
         });
     }
+
+    navigate(`/search`);
   };
 
   const [activeTab, setActiveTab] = useState(() => {
