@@ -12,6 +12,7 @@ interface Item {
   name: string;
   price: number;
   category_name: string;
+  status: number;
 }
 export const Home = () => {
   const [cookies] = useCookies(["userID", "token"]);

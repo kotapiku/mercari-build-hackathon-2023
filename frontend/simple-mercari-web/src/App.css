@@ -144,3 +144,15 @@ body {
   align-items: center;
   justify-content: left;
 }
+
+.OnSale {
+  opacity: 1;
+}
+
+.SoldOut {
+  opacity: 0.6;
+}
+
+.SoldOutContent {
+  background-color: gray;
+}

@@ -6,6 +6,7 @@ interface Item {
   name: string;
   price: number;
   category_name: string;
+  status: number;
 }
 
 interface Prop {

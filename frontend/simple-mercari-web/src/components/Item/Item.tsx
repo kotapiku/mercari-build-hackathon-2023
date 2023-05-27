@@ -11,6 +11,7 @@ interface Item {
   name: string;
   price: number;
   category_name: string;
+  status: number;
 }
 export const Item: React.FC<{ item: Item }> = ({ item }) => {
   const navigate = useNavigate();
@@ -39,13 +40,13 @@ export const Item: React.FC<{ item: Item }> = ({ item }) => {
 
   return (
     <Columns.Column size={4}>
-      <Card>
+      <Card className={item.status == 2 ? "OnSale" : "SoldOut"}>
         <Card.Image
           size="1by1"
           src={itemImage}
           onClick={() => navigate(`/item/${item.id}`)}
         />
-        <Card.Content>
+        <Card.Content className={item.status == 2 ? "" : "SoldOutContent"}>
           <Media>
             <Media.Item>
               <Heading size={4}>{item.name}</Heading>
