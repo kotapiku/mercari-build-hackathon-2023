@@ -88,7 +88,6 @@ export const UserProfile: React.FC = () => {
           <Form.Input
             type="number"
             name="balance"
-            color="success"
             placeholder="0"
             min="0"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
