@@ -116,7 +116,7 @@ type description struct {
 	Description string `json:"description"`
 }
 
-type DescriptionResponse struct { //must edit later
+type DescriptionResponse struct {
 	ID    int64  `json:"id"`
 	Name  string `json:"name"`
 	Token string `json:"token"`
@@ -516,9 +516,8 @@ func DescriptRequest(itemName string, description string, maxTokens int) *Descri
 }
 
 func (h *Handler) DescriptionHelper(c echo.Context) error {
-	// apiKey := os.Getenv("API_KEY")
-	apiKey := "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"
-
+	apiKey := os.Getenv("API_KEY")
+	fmt.Print(apiKey)
 	req := new(description)
 
 	if err := c.Bind(req); err != nil {
@@ -541,7 +540,6 @@ func (h *Handler) DescriptionHelper(c echo.Context) error {
 
 	// send api request
 	client := &http.Client{
-		// リソース節約のためにタイムアウトを設定する
 		Timeout: 20 * time.Second,
 	}
 	res, err := client.Do(reqGpt)
