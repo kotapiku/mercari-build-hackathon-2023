@@ -357,7 +357,7 @@ func (h *Handler) GetOnSaleItems(c echo.Context) error {
 	return h.getItems(c, true)
 }
 
-func (h *Handler) GetItems(c echo.Context) error {
+func (h *Handler) GetOnSaleSoldOutItems(c echo.Context) error {
 	return h.getItems(c, false)
 }
 

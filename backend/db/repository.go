@@ -163,7 +163,7 @@ func (r *ItemDBRepository) GetItems(ctx context.Context, onSaleOnly bool) ([]dom
 	if onSaleOnly {
 		rows, err = r.QueryContext(ctx, selectItemsWithCat+"WHERE status = ? ORDER BY updated_at desc", domain.ItemStatusOnSale)
 	} else {
-		rows, err = r.QueryContext(ctx, selectItemsWithCat+"ORDER BY updated_at desc")
+		rows, err = r.QueryContext(ctx, selectItemsWithCat+"WHERE status = ? OR status = ? ORDER BY updated_at desc", domain.ItemStatusOnSale, domain.ItemStatusSoldOut)
 	}
 	if err != nil {
 		return nil, err
