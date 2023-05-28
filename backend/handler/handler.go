@@ -123,14 +123,35 @@ type DescriptionResponse struct { //must edit later
 }
 
 type DescriptionRequest struct {
-	Model     string                       		`json:"model"`
-	Messages  []*DescriptionRequestMessage	`json:"message"`
-	MaxTokens int                          		`json:"maxTokens"`
+	Model     string                       `json:"model"`
+	Messages  []*DescriptionRequestMessage `json:"messages"`
+	MaxTokens int                          `json:"max_tokens"`
 }
 
 type DescriptionRequestMessage struct {
-	Role    string 		`json:"role"`
-	Content string `join:"content"`
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type Usage struct {
+	PromptTokens int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens int `json:"total_tokens"`
+}
+
+type Choice struct {
+	Message *DescriptionRequestMessage `json:"message"`
+	FinishReason string `json:"finish_reason"`
+	Index int `json:"index"`
+}
+
+type Response struct {
+	ID      string    `json:"id"`
+	Object  string    `json:"object"`
+	Created int       `json:"created"`
+	Model   string    `json:"model"`
+	Usage   *Usage    `json:"usage"`
+	Choices []*Choice `json:"choices"`
 }
 
 type Handler struct {
@@ -495,7 +516,8 @@ func DescriptRequest(itemName string, description string, maxTokens int) *Descri
 }
 
 func (h *Handler) DescriptionHelper(c echo.Context) error {
-	apiKey := os.Getenv("API_KEY")
+	// apiKey := os.Getenv("API_KEY")
+	apiKey := "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"
 
 	req := new(description)
 
@@ -513,13 +535,9 @@ func (h *Handler) DescriptionHelper(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	fmt.Print("test2")
-	// return c.JSON(http.StatusOK, "success")
-	// // set api key
+	// set api key
 	reqGpt.Header.Set("Content-Type", "application/json")
 	reqGpt.Header.Set("Authorization", "Bearer "+apiKey)
-
-	fmt.Println(reqGpt)
 
 	// send api request
 	client := &http.Client{
@@ -532,13 +550,22 @@ func (h *Handler) DescriptionHelper(c echo.Context) error {
 	}
 	defer res.Body.Close()
 
-	fmt.Println(res.StatusCode)
 	if res.StatusCode != 200 {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	// // responseをfrontに送る
-	return c.JSON(http.StatusOK, "res")
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+
+	var response Response
+	if err := json.Unmarshal(body, &response); err != nil {
+		return err
+	}
+
+	// responseをfrontに送る
+	return c.JSON(http.StatusOK, response.Choices[0].Message.Content)
 }
 
 func (h *Handler) Search(c echo.Context) error {
