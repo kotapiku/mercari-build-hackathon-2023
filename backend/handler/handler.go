@@ -134,15 +134,15 @@ type DescriptionRequestMessage struct {
 }
 
 type Usage struct {
-	PromptTokens int `json:"prompt_tokens"`
+	PromptTokens     int `json:"prompt_tokens"`
 	CompletionTokens int `json:"completion_tokens"`
-	TotalTokens int `json:"total_tokens"`
+	TotalTokens      int `json:"total_tokens"`
 }
 
 type Choice struct {
-	Message *DescriptionRequestMessage `json:"message"`
-	FinishReason string `json:"finish_reason"`
-	Index int `json:"index"`
+	Message      *DescriptionRequestMessage `json:"message"`
+	FinishReason string                     `json:"finish_reason"`
+	Index        int                        `json:"index"`
 }
 
 type Response struct {
@@ -517,7 +517,9 @@ func DescriptRequest(itemName string, description string, maxTokens int) *Descri
 
 func (h *Handler) DescriptionHelper(c echo.Context) error {
 	apiKey := os.Getenv("API_KEY")
-	fmt.Print(apiKey)
+	if apiKey == "" {
+		echo.NewHTTPError(http.StatusInternalServerError, errors.New("API_KEY is not set"))
+	}
 	req := new(description)
 
 	if err := c.Bind(req); err != nil {
