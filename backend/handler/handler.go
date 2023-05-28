@@ -706,7 +706,6 @@ func (h *Handler) Purchase(c echo.Context) error {
 }
 
 func (h *Handler) EditItem(c echo.Context) error {
-
 	ctx := c.Request().Context()
 	var req editItemRequest
 	if err := c.Bind(&req); err != nil {
@@ -714,19 +713,29 @@ func (h *Handler) EditItem(c echo.Context) error {
 	}
 
 	// convert string ID to int32
-	id, err := strconv.ParseInt(c.Param("itemID"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("itemID"), 10, 32)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	fmt.Println(req.Name, req.CategoryID, req.Price, req.Description)
+	item, err := h.ItemRepo.GetItem(ctx, int32(id))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+
+	userID, err := GetUserID(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err)
+	}
+	if item.UserID != userID {
+		return echo.NewHTTPError(http.StatusPreconditionFailed, "can not update other's item")
+	}
 
 	err = h.ItemRepo.EditItem(ctx, int64(id), req.Name, req.CategoryID, req.Price, req.Description)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	return c.NoContent(http.StatusNoContent)
-
+	return c.JSON(http.StatusOK, "successful")
 }
 
 func getEnv(key string, defaultValue string) string {
