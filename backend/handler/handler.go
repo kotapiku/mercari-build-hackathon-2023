@@ -202,7 +202,7 @@ func isValidPassword(password string) bool {
 func (h *Handler) Register(c echo.Context) error {
 	req := new(registerRequest)
 	if err := c.Bind(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// validation
@@ -215,15 +215,15 @@ func (h *Handler) Register(c echo.Context) error {
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	userID, err := h.UserRepo.AddUser(c.Request().Context(), domain.User{Name: req.Name, Password: string(hash)})
 	if err != nil {
 		if err == db.ErrConflict {
-			return echo.NewHTTPError(http.StatusConflict, err)
+			return echo.NewHTTPError(http.StatusConflict, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, registerResponse{ID: userID, Name: req.Name})
@@ -233,7 +233,7 @@ func (h *Handler) Login(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(LoginRequestByID)
 	if err := c.Bind(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// validation
@@ -244,9 +244,9 @@ func (h *Handler) Login(c echo.Context) error {
 	user, encodedToken, err := h.LoginService.LoginByID(ctx, req.UserID, req.Password)
 	if err != nil {
 		if err == service.ErrMismatchPassword {
-			return echo.NewHTTPError(http.StatusUnauthorized, err)
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, loginResponse{
@@ -260,7 +260,7 @@ func (h *Handler) LoginByName(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(LoginRequestByName)
 	if err := c.Bind(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// validation
@@ -274,9 +274,9 @@ func (h *Handler) LoginByName(c echo.Context) error {
 	user, encodedToken, err := h.LoginService.LoginByName(ctx, req.UserName, req.Password)
 	if err != nil {
 		if err == service.ErrMismatchPassword {
-			return echo.NewHTTPError(http.StatusUnauthorized, err)
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, loginResponse{
@@ -291,16 +291,16 @@ func (h *Handler) AddItem(c echo.Context) error {
 
 	req := new(addItemRequest)
 	if err := c.Bind(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	userID, err := GetUserID(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err)
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 	file, err := c.FormFile("image")
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	// validation
 	if file.Size > 1<<20 {
@@ -315,7 +315,7 @@ func (h *Handler) AddItem(c echo.Context) error {
 
 	src, err := file.Open()
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	defer src.Close()
 
@@ -323,7 +323,7 @@ func (h *Handler) AddItem(c echo.Context) error {
 	blob := bytes.NewBuffer(dest)
 
 	if _, err := io.Copy(blob, src); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	_, err = h.ItemRepo.GetCategory(ctx, req.CategoryID)
@@ -331,7 +331,7 @@ func (h *Handler) AddItem(c echo.Context) error {
 		if err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid categoryID")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	itemID, err := h.ItemRepo.AddItem(c.Request().Context(), domain.Item{
@@ -345,9 +345,9 @@ func (h *Handler) AddItem(c echo.Context) error {
 	})
 	if err != nil {
 		if err == db.ErrConflict {
-			return echo.NewHTTPError(http.StatusConflict, err)
+			return echo.NewHTTPError(http.StatusConflict, err.Error())
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, addItemResponse{ID: itemID})
@@ -358,17 +358,17 @@ func (h *Handler) Sell(c echo.Context) error {
 	req := new(sellRequest)
 
 	if err := c.Bind(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	item, err := h.ItemRepo.GetItem(ctx, req.ItemID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	userID, err := GetUserID(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err)
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 	if item.UserID != userID {
 		return echo.NewHTTPError(http.StatusPreconditionFailed, "can not sell other's item")
@@ -378,7 +378,7 @@ func (h *Handler) Sell(c echo.Context) error {
 	}
 
 	if err := h.ItemRepo.UpdateItemStatus(ctx, item.ID, domain.ItemStatusOnSale); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, "successful")
@@ -389,7 +389,7 @@ func (h *Handler) getItems(c echo.Context, onSaleOnly bool) error {
 
 	items, err := h.ItemRepo.GetItems(ctx, onSaleOnly)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	itemsRsp := make([]getItemResponse, 0, len(items))
@@ -421,17 +421,17 @@ func (h *Handler) GetItem(c echo.Context) error {
 
 	itemID, err := strconv.ParseInt(c.Param("itemID"), 10, 32)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	item, err := h.ItemRepo.GetItem(ctx, int32(itemID))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	category, err := h.ItemRepo.GetCategory(ctx, item.CategoryID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK,
 		getItemResponse{
@@ -456,14 +456,14 @@ func (h *Handler) GetUserItems(c echo.Context) error {
 
 	items, err := h.ItemRepo.GetItemsByUserID(ctx, userID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	var res []getUserItemsResponse
 	for _, item := range items {
 		cats, err := h.ItemRepo.GetCategories(ctx)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err)
+			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 		for _, cat := range cats {
 			if cat.ID == item.CategoryID {
@@ -480,7 +480,7 @@ func (h *Handler) GetCategories(c echo.Context) error {
 
 	cats, err := h.ItemRepo.GetCategories(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	res := make([]getCategoriesResponse, len(cats))
@@ -501,7 +501,7 @@ func (h *Handler) GetImage(c echo.Context) error {
 
 	data, err := h.ItemRepo.GetItemImage(ctx, int32(itemID))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.Blob(http.StatusOK, "image/jpeg", data)
@@ -537,18 +537,18 @@ func (h *Handler) DescriptionHelper(c echo.Context) error {
 	req := new(description)
 
 	if err := c.Bind(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// create api request from user input
 	new_request := DescriptRequest(req.ItemName, req.Description, 20)
 	data, err := json.Marshal(new_request)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	reqGpt, err := http.NewRequest("POST", openaiURL, bytes.NewBuffer(data))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	// set api key
 	reqGpt.Header.Set("Content-Type", "application/json")
@@ -565,7 +565,7 @@ func (h *Handler) DescriptionHelper(c echo.Context) error {
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	body, err := io.ReadAll(res.Body)
@@ -588,7 +588,7 @@ func (h *Handler) Search(c echo.Context) error {
 	itemName := c.QueryParam("name")
 	items, err := h.ItemRepo.SearchItem(ctx, itemName)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	itemsRsp := make([]getItemResponse, 0, len(items))
@@ -612,7 +612,7 @@ func (h *Handler) AddBalance(c echo.Context) error {
 
 	req := new(addBalanceRequest)
 	if err := c.Bind(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	if req.Balance <= 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, errors.New("balance must be positive"))
@@ -620,16 +620,16 @@ func (h *Handler) AddBalance(c echo.Context) error {
 
 	userID, err := GetUserID(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err)
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
 	user, err := h.UserRepo.GetUser(ctx, userID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	if err := h.UserRepo.UpdateBalance(ctx, userID, user.Balance+req.Balance); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, "successful")
@@ -640,12 +640,12 @@ func (h *Handler) GetBalance(c echo.Context) error {
 
 	userID, err := GetUserID(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err)
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
 	user, err := h.UserRepo.GetUser(ctx, userID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, getBalanceResponse{Balance: user.Balance})
@@ -656,28 +656,28 @@ func (h *Handler) Purchase(c echo.Context) error {
 
 	userID, err := GetUserID(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err)
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
 	itemID, err := strconv.ParseInt(c.Param("itemID"), 10, 32)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	item, err := h.ItemRepo.GetItem(ctx, int32(itemID))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	// user, sellerの取得
 	user, err := h.UserRepo.GetUser(ctx, userID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 	sellerID := item.UserID
 	seller, err := h.UserRepo.GetUser(ctx, sellerID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	// 売買が成立するかどうかの判定
@@ -693,13 +693,13 @@ func (h *Handler) Purchase(c echo.Context) error {
 
 	// 売買
 	if err := h.UserRepo.UpdateBalance(ctx, userID, user.Balance-item.Price); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	if err := h.UserRepo.UpdateBalance(ctx, sellerID, seller.Balance+item.Price); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	if err := h.ItemRepo.UpdateItemStatus(ctx, int32(itemID), domain.ItemStatusSoldOut); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, "successful")
@@ -715,24 +715,24 @@ func (h *Handler) EditItem(c echo.Context) error {
 	// convert string ID to int32
 	id, err := strconv.ParseInt(c.Param("itemID"), 10, 32)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	item, err := h.ItemRepo.GetItem(ctx, int32(id))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	userID, err := GetUserID(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, err)
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 	if item.UserID != userID {
 		return echo.NewHTTPError(http.StatusPreconditionFailed, "can not update other's item")
 	}
 
-	err = h.ItemRepo.EditItem(ctx, int64(id), req.Name, req.CategoryID, req.Price, req.Description)
+	err = h.ItemRepo.EditItem(ctx, int32(id), req.Name, req.CategoryID, req.Price, req.Description)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, "successful")
