@@ -92,6 +92,10 @@ body {
   transition-property: background-color, color, fill;
 }
 
+#Caution {
+  font-size: small;
+}
+
 .Title {
   background-color: #222427;
   min-height: 8vh;

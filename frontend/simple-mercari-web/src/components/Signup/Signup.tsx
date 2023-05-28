@@ -6,9 +6,13 @@ import { fetcher } from "../../helper";
 
 export const Signup = () => {
   const [name, setName] = useState<string>();
-  const [password, setPassword] = useState<string>();
+  const [password, setPassword] = useState<string>("");
   const [userID, setUserID] = useState<number>();
   const [_, setCookie] = useCookies(["userID"]);
+
+  const [validNameLength, setvalidNameLength] = useState(false);
+  const [validPassLength, setvalidPassLength] = useState(false);
+  const [hasNumber, setHasNumber] = useState(false);
 
   const navigate = useNavigate();
   const onSubmit = (_: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -22,6 +26,7 @@ export const Signup = () => {
         name: name,
         password: password,
       }),
+
     })
       .then((user) => {
         toast.success("New account is created!");
@@ -36,6 +41,16 @@ export const Signup = () => {
       });
   };
 
+  const validateNameLength = (name: string): boolean => {
+    return name.length >= 3;
+  };
+  const validatePassLength = (password: string): boolean => {
+    return password.length >= 6;
+  };
+  const validateNumber = (password: string): boolean => {
+    return /\d/.test(password);
+  };
+
   return (
     <div>
       <div className="Signup">
@@ -46,10 +61,16 @@ export const Signup = () => {
           id="MerTextInput"
           placeholder="name"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setName(e.target.value);
+            const enteredName = e.target.value;
+            setName(enteredName);
+
+            const isvalidNameLength = validateNameLength(enteredName);
+            setvalidNameLength(isvalidNameLength);
           }}
           required
         />
+        <label id="Caution">{validNameLength ? <span></span> : <span>　＊More than 3 Character</span>}</label>
+        <br></br>
         <label id="MerInputLabel">Password</label>
         <input
           type="password"
@@ -57,16 +78,24 @@ export const Signup = () => {
           id="MerTextInput"
           placeholder="password"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setPassword(e.target.value);
+            const enteredPassword = e.target.value;
+            setPassword(enteredPassword);
+
+            const isvalidPassLength = validatePassLength(enteredPassword);
+            setvalidPassLength(isvalidPassLength);
+
+            const isHasNumber = validateNumber(enteredPassword);
+            setHasNumber(isHasNumber);
           }}
         />
-        <button onClick={onSubmit} id="MerButton">
+        <label id="Caution">
+          {validPassLength ? <span></span> : <span>　＊More than 6 Character<br></br> </span>}
+          {hasNumber ? <span></span> : <span>　＊Need a Number</span>}
+        </label>
+        
+        <button onClick={onSubmit} disabled={!validNameLength || !validPassLength || !hasNumber} id="MerButton">
           Signup
-        </button>
-        {userID ? (
-          <p>Use "{userID}" as UserID for login<br></br>
-          You have successfully registered!</p>
-        ) : null}
+        </button> 
       </div>
     </div>
   );
