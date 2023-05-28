@@ -475,11 +475,6 @@ func (h *Handler) GetUserItems(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
-func (h *Handler) CreateDescription(c echo.Context) error {
-	// TODO
-	return c.JSON(http.StatusOK, "successful")
-}
-
 func (h *Handler) GetCategories(c echo.Context) error {
 	ctx := c.Request().Context()
 
