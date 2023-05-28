@@ -54,6 +54,7 @@ export const Header: React.FC = () => {
           <Tabs.Tab
             active={activeTab === tab.name}
             onClick={() => handleTabClick(tab.name, tab.to)}
+            key={tab.name}
           >
             <div className="tabItem">
               {tab.icon}

@@ -350,7 +350,7 @@ func (h *Handler) AddItem(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, addItemResponse{ID: int64(item.ID)})
+	return c.JSON(http.StatusOK, addItemResponse{ID: itemID})
 }
 
 func (h *Handler) Sell(c echo.Context) error {
@@ -473,6 +473,11 @@ func (h *Handler) GetUserItems(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) CreateDescription(c echo.Context) error {
+	// TODO
+	return c.JSON(http.StatusOK, "successful")
 }
 
 func (h *Handler) GetCategories(c echo.Context) error {

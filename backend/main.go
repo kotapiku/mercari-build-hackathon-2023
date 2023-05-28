@@ -89,7 +89,7 @@ func run(ctx context.Context) int {
 	e.POST("/register", h.Register)
 	e.POST("/login", h.Login)
 	e.POST("/login_name", h.LoginByName)
-	e.GET("/description", h.DescriptionHelper)
+	e.POST("/description", h.DescriptionHelper)
 
 	e.GET("/search", h.Search)
 
