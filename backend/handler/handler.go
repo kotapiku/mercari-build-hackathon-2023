@@ -96,6 +96,13 @@ type getBalanceResponse struct {
 	Balance int64 `json:"balance"`
 }
 
+type editItemRequest struct {
+	Name        string `json:"name"`
+	CategoryID  int64  `json:"category_id"`
+	Price       int64  `json:"price"`
+	Description string `json:"description"`
+}
+
 type LoginRequestByID struct {
 	UserID   int64  `json:"user_id"`
 	Password string `json:"password"`
@@ -691,6 +698,30 @@ func (h *Handler) Purchase(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, "successful")
+}
+
+func (h *Handler) EditItem(c echo.Context) error {
+
+	ctx := c.Request().Context()
+	var req editItemRequest
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+
+	// convert string ID to int32
+	id, err := strconv.ParseInt(c.Param("itemID"), 10, 64)
+	if err != nil {
+		return err
+	}
+	fmt.Println(req.Name, req.CategoryID, req.Price, req.Description)
+
+	err = h.ItemRepo.EditItem(ctx, int64(id), req.Name, req.CategoryID, req.Price, req.Description)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusNoContent)
+
 }
 
 func getEnv(key string, defaultValue string) string {
