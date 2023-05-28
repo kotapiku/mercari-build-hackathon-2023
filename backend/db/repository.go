@@ -82,10 +82,10 @@ func (r *UserDBRepository) UpdateBalance(ctx context.Context, id int64, balance 
 }
 
 type ItemRepository interface {
-	AddItem(ctx context.Context, item domain.Item) (domain.Item, error)
+	AddItem(ctx context.Context, item domain.Item) (int64, error)
 	GetItem(ctx context.Context, id int32) (domain.Item, error)
 	GetItemImage(ctx context.Context, id int32) ([]byte, error)
-	GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.ItemWithCategory, error)
+	GetItems(ctx context.Context, onSaleOnly bool) ([]domain.ItemWithCategory, error)
 	GetItemsByUserID(ctx context.Context, userID int64) ([]domain.Item, error)
 	GetCategory(ctx context.Context, id int64) (domain.Category, error)
 	GetCategories(ctx context.Context) ([]domain.Category, error)
@@ -101,20 +101,17 @@ func NewItemRepository(db *sql.DB) ItemRepository {
 	return &ItemDBRepository{DB: db}
 }
 
-func (r *ItemDBRepository) AddItem(ctx context.Context, item domain.Item) (domain.Item, error) {
+func (r *ItemDBRepository) AddItem(ctx context.Context, item domain.Item) (int64, error) {
 	rst, err := r.ExecContext(ctx, "INSERT INTO items (name, price, description, category_id, seller_id, image, status) VALUES (?, ?, ?, ?, ?, ?, ?)", item.Name, item.Price, item.Description, item.CategoryID, item.UserID, item.Image, item.Status)
 	if err != nil {
-		return domain.Item{}, err
+		return 0, err
 	}
 	lastID, err2 := rst.LastInsertId()
 	if err2 != nil {
-		return domain.Item{}, ErrConflict // idのconflictがおきたとき
+		return 0, ErrConflict // idのconflictがおきたとき
 	}
 
-	row := r.QueryRowContext(ctx, "SELECT * FROM items WHERE rowid = ?", lastID)
-
-	var res domain.Item
-	return res, row.Scan(&res.ID, &res.Name, &res.Price, &res.Description, &res.CategoryID, &res.UserID, &res.Image, &res.Status, &res.CreatedAt, &res.UpdatedAt)
+	return lastID, nil
 }
 
 func (r *ItemDBRepository) GetItem(ctx context.Context, id int32) (domain.Item, error) {
@@ -125,19 +122,7 @@ func (r *ItemDBRepository) GetItem(ctx context.Context, id int32) (domain.Item, 
 }
 
 const selectItemsWithCat = `
-		SELECT
-			items.id,
-			items.name,
-			items.price,
-			items.description,
-			items.category_id,
-			items.seller_id,
-			items.image,
-			items.status,
-			items.created_at,
-			items.updated_at,
-			category.id,
-			category.name
+		SELECT *
 		FROM items
 		LEFT OUTER JOIN category
 		ON items.category_id = category.id
@@ -172,8 +157,14 @@ func (r *ItemDBRepository) GetItemImage(ctx context.Context, id int32) ([]byte, 
 	return image, row.Scan(&image)
 }
 
-func (r *ItemDBRepository) GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.ItemWithCategory, error) {
-	rows, err := r.QueryContext(ctx, selectItemsWithCat+"WHERE status = ? ORDER BY updated_at desc", status)
+func (r *ItemDBRepository) GetItems(ctx context.Context, onSaleOnly bool) ([]domain.ItemWithCategory, error) {
+	var rows *sql.Rows
+	var err error
+	if onSaleOnly {
+		rows, err = r.QueryContext(ctx, selectItemsWithCat+"WHERE status = ? ORDER BY updated_at desc", domain.ItemStatusOnSale)
+	} else {
+		rows, err = r.QueryContext(ctx, selectItemsWithCat+"WHERE status = ? OR status = ? ORDER BY updated_at desc", domain.ItemStatusOnSale, domain.ItemStatusSoldOut)
+	}
 	if err != nil {
 		return nil, err
 	}

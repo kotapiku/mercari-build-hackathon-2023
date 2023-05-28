@@ -5,29 +5,29 @@ import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 
 export const Login = () => {
-  const [userID, setUserID] = useState<number>();
+  const [username, setUsername] = useState<string>();
   const [password, setPassword] = useState<string>();
   const [_, setCookie] = useCookies(["userID", "token"]);
 
   const navigate = useNavigate();
 
   const onSubmit = (_: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    fetcher<{ id: number; name: string; token: string }>(`/login`, {
+    fetcher<{ id: number; name: string; token: string }>(`/login_name`, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        user_id: userID,
+        user_name: username,
         password: password,
       }),
     })
       .then((user) => {
         toast.success("Signed in!");
         console.log("POST success:", user.id);
-        setCookie("userID", user.id);
-        setCookie("token", user.token);
+        setCookie("userID", user.id, { "path": "/" });
+        setCookie("token", user.token, { "path": "/" });
         navigate("/");
       })
       .catch((err) => {
@@ -39,14 +39,14 @@ export const Login = () => {
   return (
     <div>
       <div className="Login">
-        <label id="MerInputLabel">User ID</label>
+        <label id="MerInputLabel">User Name</label>
         <input
-          type="number"
-          name="userID"
+          type="text"
+          name="username"
           id="MerTextInput"
-          placeholder="UserID"
+          placeholder="name"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setUserID(Number(e.target.value));
+            setUsername(String(e.target.value));
           }}
           required
         />

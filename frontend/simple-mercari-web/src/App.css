@@ -1,3 +1,6 @@
+header {
+  z-index: 1;
+}
 body {
   background-color: white;
 }
@@ -19,7 +22,7 @@ body {
   flex: 1 1 0%;
   padding: 16px;
   color: black;
-  width: 300px;
+  width: 100%;
 }
 
 #MerInputLabel {
@@ -92,6 +95,10 @@ body {
   transition-property: background-color, color, fill;
 }
 
+#Caution {
+  font-size: small;
+}
+
 .Title {
   background-color: #222427;
   min-height: 8vh;
@@ -140,4 +147,16 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: left;
+}
+
+.OnSale {
+  opacity: 1;
+}
+
+.SoldOut {
+  opacity: 0.6;
+}
+
+.SoldOutContent {
+  background-color: gray;
 }

@@ -39,6 +39,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            API_KEY=${{ secrets.API_KEY }}
 
   build-frontend:
     runs-on: ubuntu-latest
