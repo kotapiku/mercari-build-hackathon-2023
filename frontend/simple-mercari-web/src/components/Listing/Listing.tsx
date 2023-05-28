@@ -129,7 +129,7 @@ export const Listing: React.FC = () => {
         console.log(res);
         setValues({
           ...values,
-          description: res.replace(/(\r\n|\n|\r)/gm, ""),
+          description: res.replace(/(\r\n|\n|\r|\")/gm, ""),
         });
       })
       .catch((error: Error) => {
