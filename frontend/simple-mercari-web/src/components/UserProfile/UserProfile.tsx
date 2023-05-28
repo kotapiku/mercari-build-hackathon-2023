@@ -9,8 +9,12 @@ import { fetcher } from "../../helper";
 interface Item {
   id: number;
   name: string;
-  price: number;
+  category_id: number;
   category_name: string;
+  user_id: number;
+  price: number;
+  description: string;
+  status: number;
 }
 
 export const UserProfile: React.FC = () => {

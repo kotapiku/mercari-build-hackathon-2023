@@ -7,33 +7,28 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 import "react-toastify/dist/ReactToastify.css";
+import { Item} from "../../common/types";
 
-interface Item {
-  id: number;
-  name: string;
-  price: number;
-  category_name: string;
-}
 export const Home = () => {
   const [cookies] = useCookies(["userID", "token"]);
-  const [items, setItems] = useState<Item[]>([]);
+  const [ items, setItems ] = useState([] as Item[]);
 
   const fetchItems = () => {
-    fetcher<Item[]>(`/items`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((data) => {
-        console.log("GET success:", data);
-        setItems(data);
+      fetcher<Item[]>(`/items`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       })
-      .catch((err) => {
-        console.log(`GET error:`, err);
-        toast.error(err.message);
-      });
+        .then((data) => {
+          console.log("GET success:", data);
+          setItems(data);
+        })
+        .catch((err) => {
+          console.log(`GET error:`, err);
+          toast.error(err.message);
+        });
   };
 
   useEffect(() => {
