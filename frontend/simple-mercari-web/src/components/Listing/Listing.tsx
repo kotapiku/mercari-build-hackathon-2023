@@ -3,6 +3,7 @@ import { useCookies } from "react-cookie";
 import { MerComponent } from "../MerComponent";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
+import { Button, Form } from "react-bulma-components";
 
 interface Category {
   id: number;
@@ -110,66 +111,115 @@ export const Listing: React.FC = () => {
       });
   };
 
+  const createDescription = (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault();
+
+    fetcher<string>(`/description`, {
+      method: "POST",
+      body: JSON.stringify({
+        name: values.name,
+        description: values.description,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    })
+      .then((res) => {
+        console.log(res);
+        setValues({ ...values, description: res });
+      })
+      .catch((error: Error) => {
+        toast.error(error.message);
+        console.error("POST error:", error);
+      });
+  };
+
   useEffect(() => {
     fetchCategories();
   }, []);
 
   return (
     <MerComponent>
-      <div className="Listing">
-        <form onSubmit={onSubmit} className="ListingForm">
-          <div>
-            <input
-              type="text"
-              name="name"
-              id="MerTextInput"
-              placeholder="name"
-              onChange={onValueChange}
-              required
-            />
-            <select
-              name="category_id"
-              id="MerTextInput"
-              value={values.category_id}
-              onChange={onSelectChange}
-            >
-              {categories &&
-                categories.map((category) => {
-                  return (
-                    <option value={category.id} key={category.id}>
-                      {category.name}
-                    </option>
-                  );
-                })}
-            </select>
-            <input
-              type="number"
-              name="price"
-              id="MerTextInput"
-              placeholder="price"
-              onChange={onValueChange}
-              required
-            />
-            <input
-              type="text"
-              name="description"
-              id="MerTextInput"
-              placeholder="description"
-              onChange={onValueChange}
-              required
-            />
-            <input
-              type="file"
-              name="image"
-              id="MerTextInput"
-              onChange={onFileChange}
-              required
-            />
-            <button type="submit" id="MerButton">
+      <div className="columns is-centered">
+        <div className="column is-4">
+          <form onSubmit={onSubmit}>
+            <Form.Field>
+              <Form.Label>Item name</Form.Label>
+              <Form.Control>
+                <Form.Input
+                  type="text"
+                  name="name"
+                  id="MerTextInput"
+                  placeholder="name"
+                  value={values.name}
+                  onChange={onValueChange}
+                  required
+                />
+              </Form.Control>
+            </Form.Field>
+            <Form.Field>
+              <Form.Control>
+                <Form.Label>Category</Form.Label>
+                <Form.Select
+                  name="category_id"
+                  value={values.category_id}
+                  onChange={onSelectChange}
+                >
+                  {categories &&
+                    categories.map((category) => {
+                      return (
+                        <option value={category.id} key={category.id}>
+                          {category.name}
+                        </option>
+                      );
+                    })}
+                </Form.Select>
+              </Form.Control>
+            </Form.Field>
+            <Form.Field>
+              <Form.Control>
+                <Form.Label>Price</Form.Label>
+                <Form.Input
+                  type="number"
+                  name="price"
+                  value={values.price}
+                  min="0"
+                  onChange={onValueChange}
+                  required
+                />
+              </Form.Control>
+            </Form.Field>
+            <Form.Field>
+              <Form.Control>
+                <Form.Label>Description</Form.Label>
+                <Form.Input
+                  type="text"
+                  name="description"
+                  value={values.description}
+                  placeholder="description"
+                  onChange={onValueChange}
+                  required
+                />
+                <Button onClick={createDescription}>Create by ChatGPT</Button>
+              </Form.Control>
+            </Form.Field>
+            <Form.Field>
+              <Form.Control>
+                <Form.Label>Image file</Form.Label>
+                <Form.Input
+                  type="file"
+                  name="image"
+                  onChange={onFileChange}
+                  required
+                />
+              </Form.Control>
+            </Form.Field>
+            <Button type="submit" id="MerButton">
               List this item
-            </button>
-          </div>
-        </form>
+            </Button>
+          </form>
+        </div>
       </div>
     </MerComponent>
   );

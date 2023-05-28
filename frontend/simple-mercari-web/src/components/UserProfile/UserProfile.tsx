@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { MerComponent } from "../MerComponent";
 import { ItemList } from "../ItemList";
 import { fetcher } from "../../helper";
-import { Container, Button, Icon, Form } from "react-bulma-components";
+import { Button, Icon, Form } from "react-bulma-components";
 import { FaYenSign } from "react-icons/fa";
 
 interface Item {
