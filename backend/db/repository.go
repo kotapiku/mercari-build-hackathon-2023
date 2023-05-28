@@ -236,9 +236,9 @@ func (r *ItemDBRepository) GetCategories(ctx context.Context) ([]domain.Category
 	return cats, nil
 }
 
-func (r *ItemDBRepository) EditItem(ctx context.Context, id int32, item domain.Item) (error) {
+func (r *ItemDBRepository) EditItem(ctx context.Context, id int32, name string, categoryID string, price string, desc string) error {
 
-	_, err := r.ExecContext(ctx, "UPDATE items SET name=?, category_id=?, price=?, description=? WHERE id=?", item.Name, item.CategoryID, item.Price, item.Description, id)
+	_, err := r.ExecContext(ctx, "UPDATE items SET name=?, category_id=?, price=?, description=? WHERE id=?", name, categoryID, price, desc, id)
 	if err != nil {
 		return err
 	}

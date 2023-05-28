@@ -596,20 +596,19 @@ func (h *Handler) EditItem(c echo.Context) error {
 		return err
 	}
 
-	// get current item details from DB
-	currentItem, err := h.ItemRepo.GetItem(ctx, int32(id))
-	if err != nil {
-		return err
-	}
+	// // get current item details from DB
+	// currentItem, err := h.ItemRepo.GetItem(ctx, int32(id))
+	// if err != nil {
+	// 	return err
+	// }
 
-	// update item details
-	currentItem.Name = req.Name
-	currentItem.CategoryID = req.CategoryID
-	currentItem.Price = req.Price
-	currentItem.Description = req.Description
+	// // update item details
+	// currentItem.Name = req.Name
+	// currentItem.CategoryID = req.CategoryID
+	// currentItem.Price = req.Price
+	// currentItem.Description = req.Description
 
-
-	err = h.ItemRepo.EditItem(ctx, int32(id), currentItem)
+	err = h.ItemRepo.EditItem(ctx, int32(id), req.Name, req.CategoryID, req.Price, req.Description)
 	if err != nil {
 		return err
 	}
