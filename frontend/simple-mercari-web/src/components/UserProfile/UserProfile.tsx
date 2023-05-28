@@ -27,7 +27,7 @@ export const UserProfile: React.FC = () => {
   const params = useParams();
 
   const fetchItems = () => {
-    fetcher<Item[]>(`/users/${params.id}/items_all`, {
+    fetcher<Item[]>(`/users/${params.id}/items`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -86,33 +86,31 @@ export const UserProfile: React.FC = () => {
 
   return (
     <MerComponent>
-      <Container className="p-2">
-        <div className="columns is-centered">
-          <div className="column is-5">
-            <Form.Field>
-              <Form.Label>Balance: {balance}</Form.Label>
-              <Form.Control>
-                <Form.Input
-                  type="number"
-                  name="balance"
-                  placeholder="0"
-                  min="0"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setAddedBalance(Number(e.target.value));
-                  }}
-                  required
-                />
-                <Icon align="left" size="small">
-                  <FaYenSign style={{ verticalAlign: -2 }} />
-                </Icon>
-              </Form.Control>
-              <Button onClick={onBalanceSubmit} id="MerButton">
-                Add balance
-              </Button>
-            </Form.Field>
-          </div>
+      <div className="columns is-centered">
+        <div className="column is-4">
+          <Form.Field>
+            <Form.Label>Balance: {balance}</Form.Label>
+            <Form.Control>
+              <Form.Input
+                type="number"
+                name="balance"
+                placeholder="0"
+                min="0"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setAddedBalance(Number(e.target.value));
+                }}
+                required
+              />
+              <Icon align="left" size="small">
+                <FaYenSign style={{ verticalAlign: -2 }} />
+              </Icon>
+            </Form.Control>
+            <Button onClick={onBalanceSubmit} id="MerButton">
+              Add balance
+            </Button>
+          </Form.Field>
         </div>
-      </Container>
+      </div>
 
       <ItemList items={items} />
     </MerComponent>
