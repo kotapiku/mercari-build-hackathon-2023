@@ -15,8 +15,9 @@ export const Header: React.FC = () => {
 
   const onLogout = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault();
-    removeCookie("userID");
-    removeCookie("token");
+    // removeCookie("userID");
+    removeCookie("userID", { path: "/" });
+    removeCookie("token", { path: "/" });
   };
 
   const tabs = [
