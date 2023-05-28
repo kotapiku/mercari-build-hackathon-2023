@@ -3,12 +3,14 @@ package handler
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/kotapiku/mercari-build-hackathon-2023/backend/db"
@@ -18,6 +20,10 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
+
+const openaiURL = "https://api.openai.com/v1/chat/completions"
+
+const apiKey = "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"
 
 var (
 	logFile = getEnv("LOGFILE", "access.log")
@@ -104,6 +110,28 @@ type loginResponse struct {
 	ID    int64  `json:"id"`
 	Name  string `json:"name"`
 	Token string `json:"token"`
+}
+
+type Description struct {
+	ItemName    string `json:"item_name"`
+	Description string `json:"description"`
+}
+
+type DescriptionResponse struct { //must edit later
+	ID    int64  `json:"id"`
+	Name  string `json:"name"`
+	Token string `json:"token"`
+}
+
+type DescriptionRequest struct {
+	Model string `json:"model"`
+	Messages []*DescriptionRequestMessage `json:"message"`
+	MaxTokens int `json:"maxTokens"`
+}
+
+type DescriptionRequestMessage struct {
+	Role string `json:"role"`
+	Content string `join:"content"`
 }
 
 type Handler struct {
@@ -293,7 +321,6 @@ func (h *Handler) AddItem(c echo.Context) error {
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-
 	return c.JSON(http.StatusOK, addItemResponse{ID: int64(item.ID)})
 }
 
@@ -449,6 +476,63 @@ func (h *Handler) GetImage(c echo.Context) error {
 	}
 
 	return c.Blob(http.StatusOK, "image/jpeg", data)
+}
+
+func DescriptRequestMessage(itemName string, description string) *DescriptionRequestMessage {
+	content := "create a sentence with " + itemName + "and " + description + "in 15 words"
+	return &DescriptionRequestMessage{
+		Role:    "user",
+		Content: content,
+	}
+}
+
+func DescriptRequest(itemName string, description string, maxTokens int) *DescriptionRequest {
+	messages := []*DescriptionRequestMessage{DescriptRequestMessage(itemName, description)}
+	return &DescriptionRequest{
+		Model:     "gpt-3.5-turbo",
+		Messages:  messages,
+		MaxTokens: maxTokens,
+	}
+}
+
+func (h *Handler) DescriptionHelper(c echo.Context) error {
+	req := new(Description)
+	
+	if err := c.Bind(req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	// create api request from user input
+	data, err := json.Marshal(DescriptRequest(req.ItemName, req.Description, 20))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+
+	}
+	reqGpt, err := http.NewRequest("POST", openaiURL, bytes.NewReader(data))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	// set api key
+	reqGpt.Header.Set("Content-Type", "application/json")
+	reqGpt.Header.Set("Authorization", "Bearer "+apiKey)
+
+	// send api request
+	client := &http.Client{
+		// リソース節約のためにタイムアウトを設定する
+		Timeout: 20 * time.Second,
+	}
+	res, err := client.Do(reqGpt)
+	if err != nil {
+		return nil
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	// responseをfrontに送る
+	return c.JSON(http.StatusOK, "res")
 }
 
 func (h *Handler) Search(c echo.Context) error {
