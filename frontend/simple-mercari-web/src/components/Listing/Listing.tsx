@@ -127,7 +127,10 @@ export const Listing: React.FC = () => {
     })
       .then((res) => {
         console.log(res);
-        setValues({ ...values, description: res });
+        setValues({
+          ...values,
+          description: res.replace(/(\r\n|\n|\r)/gm, ""),
+        });
       })
       .catch((error: Error) => {
         toast.error(error.message);

@@ -513,7 +513,12 @@ func (h *Handler) GetImage(c echo.Context) error {
 }
 
 func DescriptRequestMessage(itemName string, description string) *DescriptionRequestMessage {
-	content := "Write " + itemName + " attractively with " + description + " in 15 words"
+	content := fmt.Sprintf(
+		`Product Name: %s
+		Current Description: %s
+
+		Please generate a more appealing description under 15 words based on this information.
+	`, itemName, description)
 	return &DescriptionRequestMessage{
 		Role:    "user",
 		Content: content,
