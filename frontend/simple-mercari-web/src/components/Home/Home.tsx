@@ -13,10 +13,9 @@ import { Item } from "../../common/types";
 export const Home = () => {
   const [cookies] = useCookies(["userID", "token"]);
   const [items, setItems] = useState<Item[]>([]);
-  const [items_sold, setItemsSold] = useState<Item[]>([]);
 
   const fetchItems = () => {
-    fetcher<Item[]>(`/items`, {
+    fetcher<Item[]>(`/items_all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -32,27 +31,9 @@ export const Home = () => {
         toast.error(err.message);
       });
   };
-  const fetchItemsSold = () => {
-    fetcher<Item[]>(`/items_sold`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((data) => {
-        console.log("GET success:", data);
-        setItemsSold(data);
-      })
-      .catch((err) => {
-        console.log(`GET error:`, err);
-        toast.error(err.message);
-      });
-  };
 
   useEffect(() => {
     fetchItems();
-    fetchItemsSold();
   }, []);
 
   const signUpAndSignInPage = (
@@ -72,7 +53,7 @@ export const Home = () => {
 
   const itemListPage = (
     <MerComponent>
-      <ItemList items={items} items_sold={items_sold} />
+      <ItemList items={items} />
     </MerComponent>
   );
   return <>{cookies.token ? itemListPage : signUpAndSignInPage}</>;

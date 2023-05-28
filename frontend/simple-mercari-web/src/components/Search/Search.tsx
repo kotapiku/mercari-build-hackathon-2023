@@ -4,6 +4,7 @@ import { ItemList } from "../ItemList";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 import { Item } from "../../common/types";
+import { MerComponent } from "../MerComponent";
 
 export const Search: React.FC = () => {
   const location = useLocation();
@@ -42,6 +43,10 @@ export const Search: React.FC = () => {
   } else if (!searchResult) {
     return <div>No search result.</div>;
   } else {
-    return <ItemList items={searchResult} />;
+    return (
+      <MerComponent>
+        <ItemList items={searchResult} />
+      </MerComponent>
+    );
   }
 };

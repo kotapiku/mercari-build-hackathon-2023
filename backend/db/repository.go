@@ -85,7 +85,7 @@ type ItemRepository interface {
 	AddItem(ctx context.Context, item domain.Item) (int64, error)
 	GetItem(ctx context.Context, id int32) (domain.Item, error)
 	GetItemImage(ctx context.Context, id int32) ([]byte, error)
-	GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.ItemWithCategory, error)
+	GetItems(ctx context.Context, onSaleOnly bool) ([]domain.ItemWithCategory, error)
 	GetItemsByUserID(ctx context.Context, userID int64) ([]domain.Item, error)
 	GetCategory(ctx context.Context, id int64) (domain.Category, error)
 	GetCategories(ctx context.Context) ([]domain.Category, error)
@@ -157,8 +157,14 @@ func (r *ItemDBRepository) GetItemImage(ctx context.Context, id int32) ([]byte, 
 	return image, row.Scan(&image)
 }
 
-func (r *ItemDBRepository) GetItems(ctx context.Context, status domain.ItemStatus) ([]domain.ItemWithCategory, error) {
-	rows, err := r.QueryContext(ctx, selectItemsWithCat+"WHERE status = ? ORDER BY updated_at desc", status)
+func (r *ItemDBRepository) GetItems(ctx context.Context, onSaleOnly bool) ([]domain.ItemWithCategory, error) {
+	var rows *sql.Rows
+	var err error
+	if onSaleOnly {
+		rows, err = r.QueryContext(ctx, selectItemsWithCat+"WHERE status = ? ORDER BY updated_at desc", domain.ItemStatusOnSale)
+	} else {
+		rows, err = r.QueryContext(ctx, selectItemsWithCat+"ORDER BY updated_at desc")
+	}
 	if err != nil {
 		return nil, err
 	}

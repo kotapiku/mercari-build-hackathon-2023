@@ -27,7 +27,7 @@ export const UserProfile: React.FC = () => {
   const params = useParams();
 
   const fetchItems = () => {
-    fetcher<Item[]>(`/users/${params.id}/items`, {
+    fetcher<Item[]>(`/users/${params.id}/items_all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -114,7 +114,7 @@ export const UserProfile: React.FC = () => {
         </div>
       </Container>
 
-      <ItemList items={items} items_sold={[]} />
+      <ItemList items={items} />
     </MerComponent>
   );
 };

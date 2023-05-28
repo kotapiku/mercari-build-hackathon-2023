@@ -15,7 +15,6 @@ interface Item {
 
 interface Prop {
   items: Item[];
-  items_sold: Item[];
 }
 
 export const ItemList: React.FC<Prop> = (props) => {
@@ -23,10 +22,6 @@ export const ItemList: React.FC<Prop> = (props) => {
     <Columns>
       {props.items &&
         props.items.map((item) => {
-          return <ItemCard item={item} key={item.id} />;
-        })}
-      {props.items_sold &&
-        props.items_sold.map((item) => {
           return <ItemCard item={item} key={item.id} />;
         })}
     </Columns>

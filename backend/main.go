@@ -82,7 +82,7 @@ func run(ctx context.Context) int {
 	e.GET("/log", h.AccessLog)
 
 	e.GET("/items", h.GetOnSaleItems)
-	e.GET("/items_sold", h.GetSoldOutItems)
+	e.GET("/items_all", h.GetItems)
 	e.GET("/items/:itemID", h.GetItem)
 	e.GET("/items/:itemID/image", h.GetImage)
 	e.GET("/items/categories", h.GetCategories)

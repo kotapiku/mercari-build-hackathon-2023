@@ -329,10 +329,10 @@ func (h *Handler) Sell(c echo.Context) error {
 	return c.JSON(http.StatusOK, "successful")
 }
 
-func (h *Handler) getItems(c echo.Context, status domain.ItemStatus) error {
+func (h *Handler) getItems(c echo.Context, onSaleOnly bool) error {
 	ctx := c.Request().Context()
 
-	items, err := h.ItemRepo.GetItems(ctx, status)
+	items, err := h.ItemRepo.GetItems(ctx, onSaleOnly)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
@@ -354,11 +354,11 @@ func (h *Handler) getItems(c echo.Context, status domain.ItemStatus) error {
 }
 
 func (h *Handler) GetOnSaleItems(c echo.Context) error {
-	return h.getItems(c, domain.ItemStatusOnSale)
+	return h.getItems(c, true)
 }
 
-func (h *Handler) GetSoldOutItems(c echo.Context) error {
-	return h.getItems(c, domain.ItemStatusSoldOut)
+func (h *Handler) GetItems(c echo.Context) error {
+	return h.getItems(c, false)
 }
 
 func (h *Handler) GetItem(c echo.Context) error {
