@@ -581,7 +581,6 @@ func (h *Handler) Purchase(c echo.Context) error {
 	return c.JSON(http.StatusOK, "successful")
 }
 
-
 func (h *Handler) EditItem(c echo.Context) error {
 
 	ctx := c.Request().Context()
@@ -591,24 +590,13 @@ func (h *Handler) EditItem(c echo.Context) error {
 	}
 
 	// convert string ID to int32
-	id, err := strconv.ParseInt(c.Param("itemID"), 10, 32)
+	id, err := strconv.ParseInt(c.Param("itemID"), 10, 64)
 	if err != nil {
 		return err
 	}
+	fmt.Println(req.Name, req.CategoryID, req.Price, req.Description)
 
-	// // get current item details from DB
-	// currentItem, err := h.ItemRepo.GetItem(ctx, int32(id))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // update item details
-	// currentItem.Name = req.Name
-	// currentItem.CategoryID = req.CategoryID
-	// currentItem.Price = req.Price
-	// currentItem.Description = req.Description
-
-	err = h.ItemRepo.EditItem(ctx, int32(id), req.Name, req.CategoryID, req.Price, req.Description)
+	err = h.ItemRepo.EditItem(ctx, int64(id), req.Name, req.CategoryID, req.Price, req.Description)
 	if err != nil {
 		return err
 	}
