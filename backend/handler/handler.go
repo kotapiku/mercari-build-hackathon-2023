@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	// "go/format"
 	"io"
 	"net/http"
 	"os"
@@ -24,8 +23,6 @@ import (
 )
 
 const openaiURL = "https://api.openai.com/v1/chat/completions"
-
-const apiKey = "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"
 
 var (
 	logFile = getEnv("LOGFILE", "access.log")
@@ -498,6 +495,8 @@ func DescriptRequest(itemName string, description string, maxTokens int) *Descri
 }
 
 func (h *Handler) DescriptionHelper(c echo.Context) error {
+	apiKey := os.Getenv("API_KEY")
+
 	req := new(description)
 
 	if err := c.Bind(req); err != nil {
