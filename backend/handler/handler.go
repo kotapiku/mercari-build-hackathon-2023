@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	// "go/format"
 	"io"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
+
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -23,7 +25,7 @@ import (
 
 const openaiURL = "https://api.openai.com/v1/chat/completions"
 
-const apiKey = "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"
+const apiKey = "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"
 
 var (
 	logFile = getEnv("LOGFILE", "access.log")
@@ -112,7 +114,7 @@ type loginResponse struct {
 	Token string `json:"token"`
 }
 
-type Description struct {
+type description struct {
 	ItemName    string `json:"item_name"`
 	Description string `json:"description"`
 }
@@ -124,13 +126,13 @@ type DescriptionResponse struct { //must edit later
 }
 
 type DescriptionRequest struct {
-	Model string `json:"model"`
-	Messages []*DescriptionRequestMessage `json:"message"`
-	MaxTokens int `json:"maxTokens"`
+	Model     string                       		`json:"model"`
+	Messages  []*DescriptionRequestMessage	`json:"message"`
+	MaxTokens int                          		`json:"maxTokens"`
 }
 
 type DescriptionRequestMessage struct {
-	Role string `json:"role"`
+	Role    string 		`json:"role"`
 	Content string `join:"content"`
 }
 
@@ -479,7 +481,7 @@ func (h *Handler) GetImage(c echo.Context) error {
 }
 
 func DescriptRequestMessage(itemName string, description string) *DescriptionRequestMessage {
-	content := "create a sentence with " + itemName + "and " + description + "in 15 words"
+	content := "Write " + itemName + " attractively with " + description + " in 15 words"
 	return &DescriptionRequestMessage{
 		Role:    "user",
 		Content: content,
@@ -496,25 +498,29 @@ func DescriptRequest(itemName string, description string, maxTokens int) *Descri
 }
 
 func (h *Handler) DescriptionHelper(c echo.Context) error {
-	req := new(Description)
-	
+	req := new(description)
+
 	if err := c.Bind(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// create api request from user input
-	data, err := json.Marshal(DescriptRequest(req.ItemName, req.Description, 20))
+	new_request := DescriptRequest(req.ItemName, req.Description, 20)
+	data, err := json.Marshal(new_request)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
-
 	}
-	reqGpt, err := http.NewRequest("POST", openaiURL, bytes.NewReader(data))
+	reqGpt, err := http.NewRequest("POST", openaiURL, bytes.NewBuffer(data))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	// set api key
+	fmt.Print("test2")
+	// return c.JSON(http.StatusOK, "success")
+	// // set api key
 	reqGpt.Header.Set("Content-Type", "application/json")
 	reqGpt.Header.Set("Authorization", "Bearer "+apiKey)
+
+	fmt.Println(reqGpt)
 
 	// send api request
 	client := &http.Client{
@@ -527,11 +533,12 @@ func (h *Handler) DescriptionHelper(c echo.Context) error {
 	}
 	defer res.Body.Close()
 
+	fmt.Println(res.StatusCode)
 	if res.StatusCode != 200 {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
-	// responseをfrontに送る
+	// // responseをfrontに送る
 	return c.JSON(http.StatusOK, "res")
 }
 
