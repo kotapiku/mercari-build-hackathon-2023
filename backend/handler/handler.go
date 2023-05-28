@@ -734,9 +734,16 @@ func (h *Handler) EditItem(c echo.Context) error {
 	_, err = h.ItemRepo.GetCategory(ctx, req.CategoryID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid categoryID")
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid categoryID: "+strconv.Itoa(int(req.CategoryID)))
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	// validation
+	if !isValidName(req.Name) {
+		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid username"))
+	}
+	if req.Price <= 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "price must be greater than 0")
 	}
 
 	err = h.ItemRepo.EditItem(ctx, int32(id), req.Name, req.CategoryID, req.Price, req.Description)
