@@ -95,11 +95,7 @@ export const Signup = () => {
         
         <button onClick={onSubmit} disabled={!validNameLength || !validPassLength || !hasNumber} id="MerButton">
           Signup
-        </button>
-        {userID ? (
-          <p>Use "{userID}" as UserID for login<br></br>
-          You have successfully registered!</p>
-        ) : null}    
+        </button> 
       </div>
     </div>
   );
