@@ -91,6 +91,7 @@ type ItemRepository interface {
 	GetCategories(ctx context.Context) ([]domain.Category, error)
 	UpdateItemStatus(ctx context.Context, id int32, status domain.ItemStatus) error
 	SearchItem(ctx context.Context, itemName string) ([]domain.ItemWithCategory, error)
+	EditItem(ctx context.Context, id int32, item domain.Item) error
 }
 
 type ItemDBRepository struct {
@@ -233,4 +234,14 @@ func (r *ItemDBRepository) GetCategories(ctx context.Context) ([]domain.Category
 		return nil, err
 	}
 	return cats, nil
+}
+
+func (r *ItemDBRepository) EditItem(ctx context.Context, id int32, item domain.Item) (error) {
+
+	_, err := r.ExecContext(ctx, "UPDATE items SET name=?, category_id=?, price=?, description=? WHERE id=?", item.Name, item.CategoryID, item.Price, item.Description, id)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }
