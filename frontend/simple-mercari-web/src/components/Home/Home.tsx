@@ -8,14 +8,8 @@ import { fetcher } from "../../helper";
 import "react-toastify/dist/ReactToastify.css";
 import { MerComponent } from "../MerComponent";
 import { Container } from "react-bulma-components";
+import { Item } from "../../common/types";
 
-interface Item {
-  id: number;
-  name: string;
-  price: number;
-  category_name: string;
-  status: number;
-}
 export const Home = () => {
   const [cookies] = useCookies(["userID", "token"]);
   const [items, setItems] = useState<Item[]>([]);

@@ -8,6 +8,7 @@ import "./App.css";
 import { Header } from "./components/Header/Header";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Search } from "./components/Search";
 
 export const App: React.VFC = () => {
   return (
@@ -15,13 +16,14 @@ export const App: React.VFC = () => {
       <ToastContainer position="bottom-center" />
 
       <BrowserRouter>
-        <div>
+        <div className="MerComponent">
           <Header></Header>
           <Routes>
             <Route index element={<Home />} />
             <Route path="/item/:id" element={<ItemDetail />} />
             <Route path="/user/:id" element={<UserProfile />} />
             <Route path="/sell" element={<Listing />} />
+            <Route path="/search" element={<Search />} />
           </Routes>
         </div>
       </BrowserRouter>
