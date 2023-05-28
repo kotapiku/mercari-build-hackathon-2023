@@ -2,33 +2,34 @@ import { Login } from "../Login";
 import { Signup } from "../Signup";
 import { ItemList } from "../ItemList";
 import { useCookies } from "react-cookie";
-import { MerComponent } from "../MerComponent";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { fetcher } from "../../helper";
 import "react-toastify/dist/ReactToastify.css";
-import { Item} from "../../common/types";
+import { MerComponent } from "../MerComponent";
+import { Container } from "react-bulma-components";
+import { Item } from "../../common/types";
 
 export const Home = () => {
   const [cookies] = useCookies(["userID", "token"]);
-  const [ items, setItems ] = useState([] as Item[]);
+  const [items, setItems] = useState<Item[]>([]);
 
   const fetchItems = () => {
-      fetcher<Item[]>(`/items`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
+    fetcher<Item[]>(`/items_all`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    })
+      .then((data) => {
+        console.log("GET success:", data);
+        setItems(data);
       })
-        .then((data) => {
-          console.log("GET success:", data);
-          setItems(data);
-        })
-        .catch((err) => {
-          console.log(`GET error:`, err);
-          toast.error(err.message);
-        });
+      .catch((err) => {
+        console.log(`GET error:`, err);
+        toast.error(err.message);
+      });
   };
 
   useEffect(() => {
@@ -36,27 +37,24 @@ export const Home = () => {
   }, []);
 
   const signUpAndSignInPage = (
-    <>
-      <div>
-        <Signup />
+    <Container className="p-2">
+      <div className="columns is-centered">
+        <div className="column is-4">
+          <Signup />
+        </div>
       </div>
-      or
-      <div>
-        <Login />
+      <div className="columns is-centered">
+        <div className="column is-4">
+          <Login />
+        </div>
       </div>
-    </>
+    </Container>
   );
 
   const itemListPage = (
     <MerComponent>
-      <div>
-        <span>
-          <p>Logined User ID: {cookies.userID}</p>
-        </span>
-        <ItemList items={items} />
-      </div>
+      <ItemList items={items} />
     </MerComponent>
   );
-
   return <>{cookies.token ? itemListPage : signUpAndSignInPage}</>;
 };

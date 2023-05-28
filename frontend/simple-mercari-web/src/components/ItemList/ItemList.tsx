@@ -1,4 +1,5 @@
 import React from "react";
+import { Columns } from "react-bulma-components";
 import { ItemCard } from "../ItemCard";
 
 interface Item {
@@ -18,11 +19,11 @@ interface Prop {
 
 export const ItemList: React.FC<Prop> = (props) => {
   return (
-    <div>
+    <Columns>
       {props.items &&
         props.items.map((item) => {
           return <ItemCard item={item} key={item.id} />;
         })}
-    </div>
+    </Columns>
   );
 };

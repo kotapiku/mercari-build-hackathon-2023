@@ -15,8 +15,8 @@ export const Header: React.FC = () => {
 
   const onLogout = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault();
-    removeCookie("userID");
-    removeCookie("token");
+    removeCookie("userID", { path: "/" });
+    removeCookie("token", { path: "/" });
   };
 
   const tabs = [
@@ -47,6 +47,24 @@ export const Header: React.FC = () => {
     }
   }, [location]);
 
+  const tab = (
+    <Tabs type="boxed" className="is-centered is-medium">
+      {tabs.map((tab) => {
+        return (
+          <Tabs.Tab
+            active={activeTab === tab.name}
+            onClick={() => handleTabClick(tab.name, tab.to)}
+          >
+            <div className="tabItem">
+              {tab.icon}
+              <span>{tab.name}</span>
+            </div>
+          </Tabs.Tab>
+        );
+      })}
+    </Tabs>
+  );
+
   return (
     <>
       <header>
@@ -70,21 +88,7 @@ export const Header: React.FC = () => {
             Logout
           </Button>
         </div>
-        <Tabs type="boxed" className="is-centered is-medium">
-          {tabs.map((tab) => {
-            return (
-              <Tabs.Tab
-                active={activeTab === tab.name}
-                onClick={() => handleTabClick(tab.name, tab.to)}
-              >
-                <div className="tabItem">
-                  {tab.icon}
-                  <span>{tab.name}</span>
-                </div>
-              </Tabs.Tab>
-            );
-          })}
-        </Tabs>
+        {cookies.token ? tab : <></>}
       </header>
     </>
   );

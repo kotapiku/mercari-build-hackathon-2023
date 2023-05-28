@@ -26,8 +26,8 @@ export const Login = () => {
       .then((user) => {
         toast.success("Signed in!");
         console.log("POST success:", user.id);
-        setCookie("userID", user.id);
-        setCookie("token", user.token);
+        setCookie("userID", user.id, { "path": "/" });
+        setCookie("token", user.token, { "path": "/" });
         navigate("/");
       })
       .catch((err) => {

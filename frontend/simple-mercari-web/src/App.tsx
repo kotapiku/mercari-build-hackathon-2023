@@ -13,20 +13,18 @@ import { Search } from "./components/Search";
 export const App: React.VFC = () => {
   return (
     <>
-        <ToastContainer position="bottom-center" />
+      <ToastContainer position="bottom-center" />
 
-        <BrowserRouter>
-          <div className="MerComponent">
-            <Header></Header>
-            <Routes>
-              <Route index element={<Home />} />
-              <Route path="/item/:id" element={<ItemDetail />} />
-              <Route path="/user/:id" element={<UserProfile />} />
-              <Route path="/sell" element={<Listing />} />
-              <Route path="/search" element={<Search />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
+      <BrowserRouter>
+        <Header></Header>
+        <Routes>
+          <Route index element={<Home />} />
+          <Route path="/item/:id" element={<ItemDetail />} />
+          <Route path="/user/:id" element={<UserProfile />} />
+          <Route path="/sell" element={<Listing />} />
+          <Route path="/search" element={<Search />} />
+        </Routes>
+      </BrowserRouter>
     </>
   );
 };

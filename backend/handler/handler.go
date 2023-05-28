@@ -38,10 +38,11 @@ type registerResponse struct {
 }
 
 type getUserItemsResponse struct {
-	ID           int32  `json:"id"`
-	Name         string `json:"name"`
-	Price        int64  `json:"price"`
-	CategoryName string `json:"category_name"`
+	ID           int32             `json:"id"`
+	Name         string            `json:"name"`
+	Price        int64             `json:"price"`
+	CategoryName string            `json:"category_name"`
+	Status       domain.ItemStatus `json:"status"`
 }
 
 type getItemsResponse struct {
@@ -328,10 +329,10 @@ func (h *Handler) Sell(c echo.Context) error {
 	return c.JSON(http.StatusOK, "successful")
 }
 
-func (h *Handler) getItems(c echo.Context, status domain.ItemStatus) error {
+func (h *Handler) getItems(c echo.Context, onSaleOnly bool) error {
 	ctx := c.Request().Context()
 
-	items, err := h.ItemRepo.GetItems(ctx, status)
+	items, err := h.ItemRepo.GetItems(ctx, onSaleOnly)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
@@ -353,11 +354,11 @@ func (h *Handler) getItems(c echo.Context, status domain.ItemStatus) error {
 }
 
 func (h *Handler) GetOnSaleItems(c echo.Context) error {
-	return h.getItems(c, domain.ItemStatusOnSale)
+	return h.getItems(c, true)
 }
 
-func (h *Handler) GetSoldOutItems(c echo.Context) error {
-	return h.getItems(c, domain.ItemStatusSoldOut)
+func (h *Handler) GetOnSaleSoldOutItems(c echo.Context) error {
+	return h.getItems(c, false)
 }
 
 func (h *Handler) GetItem(c echo.Context) error {
@@ -411,7 +412,7 @@ func (h *Handler) GetUserItems(c echo.Context) error {
 		}
 		for _, cat := range cats {
 			if cat.ID == item.CategoryID {
-				res = append(res, getUserItemsResponse{ID: item.ID, Name: item.Name, Price: item.Price, CategoryName: cat.Name})
+				res = append(res, getUserItemsResponse{ID: item.ID, Name: item.Name, Price: item.Price, CategoryName: cat.Name, Status: item.Status})
 			}
 		}
 	}

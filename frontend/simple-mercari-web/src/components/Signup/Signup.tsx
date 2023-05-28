@@ -26,12 +26,11 @@ export const Signup = () => {
         name: name,
         password: password,
       }),
-
     })
       .then((user) => {
         toast.success("New account is created!");
         console.log("POST success:", user.id);
-        setCookie("userID", user.id);
+        setCookie("userID", user.id, { "path": "/" });
         setUserID(user.id);
         navigate("/");
       })
@@ -56,6 +55,7 @@ export const Signup = () => {
       <div className="Signup">
         <label id="MerInputLabel">User Name</label>
         <input
+          className="is-fullwidth"
           type="text"
           name="name"
           id="MerTextInput"
@@ -69,7 +69,13 @@ export const Signup = () => {
           }}
           required
         />
-        <label id="Caution">{validNameLength ? <span></span> : <span>　＊More than 3 Character</span>}</label>
+        <label id="Caution">
+          {validNameLength ? (
+            <span></span>
+          ) : (
+            <span>　＊More than 3 Character</span>
+          )}
+        </label>
         <br></br>
         <label id="MerInputLabel">Password</label>
         <input
@@ -89,13 +95,23 @@ export const Signup = () => {
           }}
         />
         <label id="Caution">
-          {validPassLength ? <span></span> : <span>　＊More than 6 Character<br></br> </span>}
+          {validPassLength ? (
+            <span></span>
+          ) : (
+            <span>
+              　＊More than 6 Character<br></br>{" "}
+            </span>
+          )}
           {hasNumber ? <span></span> : <span>　＊Need a Number</span>}
         </label>
-        
-        <button onClick={onSubmit} disabled={!validNameLength || !validPassLength || !hasNumber} id="MerButton">
+
+        <button
+          onClick={onSubmit}
+          disabled={!validNameLength || !validPassLength || !hasNumber}
+          id="MerButton"
+        >
           Signup
-        </button> 
+        </button>
       </div>
     </div>
   );
