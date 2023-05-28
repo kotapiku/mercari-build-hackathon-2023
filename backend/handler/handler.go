@@ -3,12 +3,15 @@ package handler
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
+
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/kotapiku/mercari-build-hackathon-2023/backend/db"
@@ -18,6 +21,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
+
+const openaiURL = "https://api.openai.com/v1/chat/completions"
 
 var (
 	logFile = getEnv("LOGFILE", "access.log")
@@ -105,6 +110,49 @@ type loginResponse struct {
 	ID    int64  `json:"id"`
 	Name  string `json:"name"`
 	Token string `json:"token"`
+}
+
+type description struct {
+	ItemName    string `json:"item_name"`
+	Description string `json:"description"`
+}
+
+type DescriptionResponse struct {
+	ID    int64  `json:"id"`
+	Name  string `json:"name"`
+	Token string `json:"token"`
+}
+
+type DescriptionRequest struct {
+	Model     string                       `json:"model"`
+	Messages  []*DescriptionRequestMessage `json:"messages"`
+	MaxTokens int                          `json:"max_tokens"`
+}
+
+type DescriptionRequestMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type Usage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+}
+
+type Choice struct {
+	Message      *DescriptionRequestMessage `json:"message"`
+	FinishReason string                     `json:"finish_reason"`
+	Index        int                        `json:"index"`
+}
+
+type Response struct {
+	ID      string    `json:"id"`
+	Object  string    `json:"object"`
+	Created int       `json:"created"`
+	Model   string    `json:"model"`
+	Usage   *Usage    `json:"usage"`
+	Choices []*Choice `json:"choices"`
 }
 
 type Handler struct {
@@ -455,6 +503,76 @@ func (h *Handler) GetImage(c echo.Context) error {
 	}
 
 	return c.Blob(http.StatusOK, "image/jpeg", data)
+}
+
+func DescriptRequestMessage(itemName string, description string) *DescriptionRequestMessage {
+	content := "Write " + itemName + " attractively with " + description + " in 15 words"
+	return &DescriptionRequestMessage{
+		Role:    "user",
+		Content: content,
+	}
+}
+
+func DescriptRequest(itemName string, description string, maxTokens int) *DescriptionRequest {
+	messages := []*DescriptionRequestMessage{DescriptRequestMessage(itemName, description)}
+	return &DescriptionRequest{
+		Model:     "gpt-3.5-turbo",
+		Messages:  messages,
+		MaxTokens: maxTokens,
+	}
+}
+
+func (h *Handler) DescriptionHelper(c echo.Context) error {
+	apiKey := os.Getenv("API_KEY")
+	if apiKey == "" {
+		echo.NewHTTPError(http.StatusInternalServerError, errors.New("API_KEY is not set"))
+	}
+	req := new(description)
+
+	if err := c.Bind(req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	// create api request from user input
+	new_request := DescriptRequest(req.ItemName, req.Description, 20)
+	data, err := json.Marshal(new_request)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	reqGpt, err := http.NewRequest("POST", openaiURL, bytes.NewBuffer(data))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	// set api key
+	reqGpt.Header.Set("Content-Type", "application/json")
+	reqGpt.Header.Set("Authorization", "Bearer "+apiKey)
+
+	// send api request
+	client := &http.Client{
+		Timeout: 20 * time.Second,
+	}
+	res, err := client.Do(reqGpt)
+	if err != nil {
+		return nil
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+
+	var response Response
+	if err := json.Unmarshal(body, &response); err != nil {
+		return err
+	}
+
+	// responseをfrontに送る
+	return c.JSON(http.StatusOK, response.Choices[0].Message.Content)
 }
 
 func (h *Handler) Search(c echo.Context) error {
