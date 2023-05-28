@@ -33,16 +33,6 @@ func (r *UserDBRepository) AddUser(ctx context.Context, user domain.User) (int64
 		return 0, err
 	}
 
-	row := tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE name = ?", user.Name)
-	var count int
-	if err := row.Scan(&count); err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-	if count > 0 {
-		tx.Rollback()
-		return 0, ErrConflict
-	}
 	rst, err := tx.ExecContext(ctx, "INSERT INTO users (name, password) VALUES (?, ?) ", user.Name, user.Password)
 	if err != nil {
 		tx.Rollback()
