@@ -3,6 +3,9 @@ FROM golang:1.19-alpine as golang
 RUN apk update && apk upgrade
 RUN apk add --no-cache sqlite sqlite gcc musl-dev
 
+ARG API_KEY
+ENV API_KEY=$API_KEY
+
 WORKDIR /app
 COPY . /app
 
