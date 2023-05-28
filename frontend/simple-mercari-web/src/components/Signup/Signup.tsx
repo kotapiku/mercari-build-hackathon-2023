@@ -30,7 +30,7 @@ export const Signup = () => {
       .then((user) => {
         toast.success("New account is created!");
         console.log("POST success:", user.id);
-        setCookie("userID", user.id);
+        setCookie("userID", user.id, { "path": "/" });
         setUserID(user.id);
         navigate("/");
       })
