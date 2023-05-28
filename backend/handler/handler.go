@@ -722,12 +722,21 @@ func (h *Handler) EditItem(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
+	// check if the user is the owner of the item
 	userID, err := GetUserID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 	if item.UserID != userID {
 		return echo.NewHTTPError(http.StatusPreconditionFailed, "can not update other's item")
+	}
+	// check category exists
+	_, err = h.ItemRepo.GetCategory(ctx, req.CategoryID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid categoryID")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	err = h.ItemRepo.EditItem(ctx, int32(id), req.Name, req.CategoryID, req.Price, req.Description)
