@@ -91,10 +91,10 @@ type getBalanceResponse struct {
 }
 
 type editItemRequest struct {
-	Name        string `form:"name"`
-	CategoryID  int64  `form:"category_id"`
-	Price       int64  `form:"price"`
-	Description string `form:"description"`
+	Name        string `json:"name"`
+	CategoryID  int64  `json:"category_id"`
+	Price       int64  `json:"price"`
+	Description string `json:"description"`
 }
 
 type LoginRequestByID struct {
@@ -607,6 +607,7 @@ func (h *Handler) EditItem(c echo.Context) error {
 	currentItem.CategoryID = req.CategoryID
 	currentItem.Price = req.Price
 	currentItem.Description = req.Description
+
 
 	err = h.ItemRepo.EditItem(ctx, int32(id), currentItem)
 	if err != nil {
