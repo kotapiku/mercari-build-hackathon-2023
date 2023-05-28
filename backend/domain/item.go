@@ -3,7 +3,7 @@ package domain
 type ItemStatus int
 
 const (
-	ItemStatusInitial ItemStatus = iota
+	ItemStatusInitial ItemStatus = iota + 1
 	ItemStatusOnSale
 	ItemStatusSoldOut
 )
@@ -19,6 +19,11 @@ type Item struct {
 	Status      ItemStatus
 	CreatedAt   string
 	UpdatedAt   string
+}
+
+type ItemWithCategory struct {
+	Item     Item
+	Category Category
 }
 
 type Category struct {
