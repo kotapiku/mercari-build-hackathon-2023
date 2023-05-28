@@ -123,7 +123,19 @@ func (r *ItemDBRepository) GetItem(ctx context.Context, id int32) (domain.Item, 
 }
 
 const selectItemsWithCat = `
-		SELECT *
+		SELECT
+			items.id,
+			items.name,
+			items.price,
+			items.description,
+			items.category_id,
+			items.seller_id,
+			items.image,
+			items.status,
+			items.created_at,
+			items.updated_at,
+			category.id as category_id_c,
+			category.name as category_name
 		FROM items
 		LEFT OUTER JOIN category
 		ON items.category_id = category.id
